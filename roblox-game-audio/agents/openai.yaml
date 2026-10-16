@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏音频"
+  short_description: "规划 Roblox 音频事件、空间衰减、并发播放与资源生命周期"
+  default_prompt: "使用 $roblox-game-audio 设计或接入 Roblox 游戏音频并验证生命周期。"

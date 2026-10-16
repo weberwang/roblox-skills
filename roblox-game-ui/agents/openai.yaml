@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏 UI"
+  short_description: "设计 Roblox 安全区、本地化以及触控、键鼠和手柄可用的游戏界面"
+  default_prompt: "使用 $roblox-game-ui 实现 Roblox ScreenGui 界面并检查输入与布局边界。"

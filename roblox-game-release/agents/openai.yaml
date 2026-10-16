@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏发布"
+  short_description: "准备 Roblox Experience 发布候选、许可检查、灰度计划与回滚材料"
+  default_prompt: "使用 $roblox-game-release 准备 Roblox Experience 发布候选与回滚清单。"

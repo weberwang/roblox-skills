@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 玩法开发"
+  short_description: "实现 Roblox 核心玩法、交互状态、服务端请求校验与失败处理"
+  default_prompt: "使用 $roblox-gameplay-development 实现 Roblox 核心玩法与服务器校验。"

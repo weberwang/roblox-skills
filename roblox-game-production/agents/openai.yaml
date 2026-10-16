@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏制作策划"
+  short_description: "拆分 Roblox 玩家体验范围、版本工作项、可观察验收标准与团队交接"
+  default_prompt: "使用 $roblox-game-production 将 Roblox 游戏目标拆成可实现、可验收的范围。"

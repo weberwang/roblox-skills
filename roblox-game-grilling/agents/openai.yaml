@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏拷问"
+  short_description: "澄清无法由证据消除的 Roblox 游戏取舍并记录真实用户决定与批准范围"
+  default_prompt: "使用 $roblox-game-grilling 调查事实、逐项澄清必要的 Roblox 游戏取舍，并记录用户决定。"

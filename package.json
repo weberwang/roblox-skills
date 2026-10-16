@@ -1,0 +1,15 @@
+{
+  "name": "roblox-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "基于 Roblox Studio 插件的阶段化游戏开发技能与工作项工具",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "roblox-skills": "./scripts/install-project-skills.mjs" },
+  "scripts": {
+    "check": "node scripts/check-skills.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "files": ["scripts", "roblox-*/**", "README.md", "docs/workflow-gap-audit.md"],
+  "license": "UNLICENSED"
+}

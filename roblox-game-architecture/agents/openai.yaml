@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏架构"
+  short_description: "设计 Roblox 服务边界、服务器权威状态、Remote 校验与玩家生命周期"
+  default_prompt: "使用 $roblox-game-architecture 设计或审查 Roblox Experience 的 DataModel 与系统边界。"

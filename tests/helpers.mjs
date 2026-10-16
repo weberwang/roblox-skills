@@ -1,0 +1,61 @@
+import assert from "node:assert/strict";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { createWorkItem } from "../roblox-game-workflow-control/scripts/workflow-control.mjs";
+
+/** 在具名隔离目录中执行测试，清理前验证最终绝对路径的归属。 */
+export function inProject(callback) {
+  const root = mkdtempSync(join(tmpdir(), "roblox-skills-test-"));
+  try { return callback(root); } finally {
+    assert.equal(dirname(resolve(root)), resolve(tmpdir()));
+    assert.ok(root.startsWith(join(tmpdir(), "roblox-skills-test-")));
+    rmSync(root, { recursive: true, force: true });
+  }
+}
+
+/** 构造有真实本地产物的测试记录，不连接 Studio，也不声称游戏运行通过。 */
+export function fixture(root, type = "PROJECT") {
+  const item = createWorkItem("test-loop", "测试用交付记录", type);
+  item.target.studioId = "test-studio";
+  item.target.placeId = 0;
+  item.target.universeId = 0;
+  item.state = "validating";
+  item.scope.files = ["src/main.luau"];
+  item.implementation = {
+    owner: "测试负责人", units: [{ id: "main", kind: "MODULE", dependsOn: [], owner: "测试负责人", files: ["src/main.luau"], instances: [], status: "complete" }],
+    verification: item.requiredEvidence.map((type) => ({ id: type, description: "仅测试本地记录校验", evidenceType: type })), stopConditions: ["不连接 Studio"],
+  };
+  if (type === "DISPLAY_LAYER") item.hostSceneId = "main-scene";
+  if (["SCENE", "DISPLAY_LAYER"].includes(type)) item.stage = "V4";
+  mkdirSync(join(root, "evidence"), { recursive: true });
+  for (const evidenceType of item.requiredEvidence) {
+    const path = `evidence/${evidenceType}.txt`;
+    writeFileSync(join(root, path), "测试夹具，只用于验证记录契约。\n");
+    item.evidence.push({ id: evidenceType, checkId: evidenceType, workItemId: item.id, observedAt: "2026-10-16T00:00:00Z", type: evidenceType, candidate: item.candidate, result: "PASS", summary: "本地测试夹具", path,
+      studioId: item.target.studioId, placeId: 0, universeId: 0, datamodel: ["play", "console"].includes(evidenceType) ? "Server" : "Edit" });
+  }
+  item.acceptanceResults = [{ id: "goal", status: "PASS", evidenceIds: [...item.requiredEvidence] }];
+  item.domainReview = { status: "PASS", reviewer: "独立测试审查者", summary: "本地夹具审查记录", evidenceIds: [item.requiredEvidence[0]] };
+  if (["SCENE", "DISPLAY_LAYER"].includes(type)) {
+    item.visualContractRef = "evidence/visual-contract.json";
+    writeFileSync(join(root, item.visualContractRef), JSON.stringify({ version: 1, workItemId: item.id,
+      orientations: ["landscape"], inputs: ["keyboard-mouse"], locales: ["zh-CN"], safeAreaPolicy: "测试用安全区策略",
+      viewports: [{ id: "desktop", width: 1280, height: 720, orientation: "landscape" }],
+      coverage: { revision: 1, userMessageRef: "test-fixture-only", cases: [
+        { id: "desktop-normal", viewportId: "desktop", input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" },
+      ] },
+      nodes: [{ id: "root", path: "game.StarterGui.Test", parentId: null, role: "测试根节点", layoutRef: "屏幕安全内容区域" }],
+    }));
+    const play = item.evidence.find((entry) => entry.type === "play");
+    play.datamodel = "Client";
+    play.coverage = { revision: 1, caseId: "desktop-normal", viewportId: "desktop", width: 1280, height: 720,
+      input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" };
+    item.stageReviews = ["V0", "V1", "V2", "V3", "V4"].map((stage) => ({ stage, workItemId: item.id, candidate: item.candidate, path: item.visualContractRef }));
+    item.visualReview = { status: "accepted", candidate: item.candidate, evidenceId: "visual", userMessageRef: "test-fixture-only",
+      qualityResults: Object.fromEntries(["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"].map((key) => [key, { status: "PASS", reason: "仅本地测试夹具" }])),
+      scenarios: ["normal-play", "repeated-feedback", "event-peak", "overlap-peak"].map((id) => ({ id, required: id === "normal-play", result: id === "normal-play" ? "PASS" : "NOT_APPLICABLE", evidenceIds: id === "normal-play" ? ["play"] : [], reason: "仅测试本地契约" })),
+    };
+  }
+  return item;
+}

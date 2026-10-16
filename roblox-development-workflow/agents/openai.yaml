@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏开发编排"
+  short_description: "连接 Studio 插件，按需求、工程、场景、交互和验证阶段协调完整游戏开发工作"
+  default_prompt: "使用 $roblox-development-workflow 检查当前工程并推进已授权的游戏开发任务。"

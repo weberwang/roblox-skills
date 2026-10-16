@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox QA 与性能"
+  short_description: "建立 Roblox 功能、安全与性能验证矩阵，并保留可复现的运行证据"
+  default_prompt: "使用 $roblox-game-qa-performance 为 Roblox 游戏建立可复现的 QA 与性能验证。"

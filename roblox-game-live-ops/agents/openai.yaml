@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 在线运营"
+  short_description: "设计 Roblox DataStore 写入、收据幂等、运营开关及故障回滚方案"
+  default_prompt: "使用 $roblox-game-live-ops 设计 Roblox 在线数据、收据结算或运营配置。"

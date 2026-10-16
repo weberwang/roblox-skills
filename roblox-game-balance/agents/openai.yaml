@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏数值"
+  short_description: "建模 Roblox 难度、经济、奖励与成长曲线，并定义可验证的数值边界"
+  default_prompt: "使用 $roblox-game-balance 为 Roblox 游戏建立可解释、可校准的数值方案。"

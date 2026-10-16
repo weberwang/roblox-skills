@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 视觉与资源"
+  short_description: "核实 Roblox 资源来源、许可、脚本安全和资产身份后再正式接入"
+  default_prompt: "使用 $roblox-game-visual-assets 规划或接入 Roblox 游戏视觉资源，并核实来源与安全边界。"

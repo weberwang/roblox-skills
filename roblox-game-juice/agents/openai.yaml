@@ -1,0 +1,4 @@
+interface:
+  display_name: "Roblox 游戏反馈与动效"
+  short_description: "为 Roblox 玩法事件映射动画、音效和粒子反馈，并管理中断与清理"
+  default_prompt: "使用 $roblox-game-juice 为 Roblox 玩法事件设计可重复、安全收尾的表现反馈。"
