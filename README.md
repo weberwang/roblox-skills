@@ -29,7 +29,18 @@
 
 ## 安装到游戏项目
 
-需要 Node.js 22 或更高。已克隆本工程后：
+需要 Node.js 22 或更高。在目标游戏项目目录中，可直接从 [GitHub 仓库](https://github.com/weberwang/roblox-skills)发现并安装全部技能：
+
+```powershell
+Set-Location D:\Games\my-game
+npx skills add weberwang/roblox-skills --list
+npx skills add weberwang/roblox-skills --skill '*' --agent codex --yes --copy
+npx skills list --agent codex
+```
+
+`--list` 应发现全部 14 个技能；`--skill '*'` 安装全部技能，`--agent codex` 指定 Codex，`--yes` 跳过安装确认，`--copy` 将文件复制到当前项目的 `.agents/skills/`。安装后用 `skills list` 检查项目技能。领域技能有跨技能引用，完整流程建议安装全部 14 项；只安装部分时，应同时提供其引用的控制/编排技能与相关领域技能。
+
+已克隆本工程时，也可使用本地安装器：
 
 ```powershell
 node D:\Git\roblox-skills\scripts\install-project-skills.mjs D:\Games\my-game
@@ -44,9 +55,7 @@ npx skills add D:\Git\roblox-skills --list
 npx skills add D:\Git\roblox-skills --skill roblox-development-workflow roblox-game-workflow-control
 ```
 
-领域技能有跨技能引用，完整流程建议用本工程安装器安装全部 14 项；只安装部分时，应同时提供其引用的控制/编排技能与相关领域技能。
-
-根目录没有 `SKILL.md`，避免通用 CLI 在根入口提前停止扫描，导致子技能无法被发现。初始单技能模板已转为技能集合。`package.json` 暂设 private，本工程未上传 npm 或 GitHub；不提供虚构的远程 npx 包地址。
+根目录没有 `SKILL.md`，避免通用 CLI 在根入口提前停止扫描，导致子技能无法被发现。初始单技能模板已转为技能集合。源码已托管于 GitHub，`package.json` 保持 private，尚未发布 npm 包；上述 `npx skills` 命令运行 skills CLI，从 GitHub 拉取本仓库中的技能。
 
 ## 开始游戏开发
 
