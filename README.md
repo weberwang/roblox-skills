@@ -32,10 +32,10 @@
 需要 Node.js 22 或更高。在目标游戏项目目录中执行：
 
 ```powershell
-npx skills add weberwang/roblox-skills -y
+npx skills add weberwang/roblox-skills
 ```
 
-默认从 [GitHub 仓库](https://github.com/weberwang/roblox-skills)安装全部 14 个技能到当前项目的 `.agents/skills/`，覆盖已有同名技能；重复执行即可更新。`-y` 跳过交互确认。按需使用 `npx skills add weberwang/roblox-skills --list` 查看可用技能，或 `npx skills list` 查看已安装技能。
+默认从 [GitHub 仓库](https://github.com/weberwang/roblox-skills)安装全部 14 个技能到当前项目的 `.agents/skills/`，覆盖已有同名技能；重复执行即可更新。按需使用 `npx skills add weberwang/roblox-skills --list` 查看可用技能，或 `npx skills list` 查看已安装技能。
 
 已克隆本工程时，也可使用本地安装器：
 
