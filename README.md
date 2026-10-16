@@ -29,16 +29,13 @@
 
 ## 安装到游戏项目
 
-需要 Node.js 22 或更高。在目标游戏项目目录中，可直接从 [GitHub 仓库](https://github.com/weberwang/roblox-skills)发现并安装全部技能：
+需要 Node.js 22 或更高。在目标游戏项目目录中执行：
 
 ```powershell
-Set-Location D:\Games\my-game
-npx skills add weberwang/roblox-skills --list
-npx skills add weberwang/roblox-skills --skill '*' --agent codex --yes --copy
-npx skills list --agent codex
+npx skills add weberwang/roblox-skills -y
 ```
 
-`--list` 应发现全部 14 个技能；`--skill '*'` 安装全部技能，`--agent codex` 指定 Codex，`--yes` 跳过安装确认，`--copy` 将文件复制到当前项目的 `.agents/skills/`。安装后用 `skills list` 检查项目技能。领域技能有跨技能引用，完整流程建议安装全部 14 项；只安装部分时，应同时提供其引用的控制/编排技能与相关领域技能。
+默认从 [GitHub 仓库](https://github.com/weberwang/roblox-skills)安装全部 14 个技能到当前项目的 `.agents/skills/`，覆盖已有同名技能；重复执行即可更新。`-y` 跳过交互确认。按需使用 `npx skills add weberwang/roblox-skills --list` 查看可用技能，或 `npx skills list` 查看已安装技能。
 
 已克隆本工程时，也可使用本地安装器：
 
@@ -47,13 +44,6 @@ node D:\Git\roblox-skills\scripts\install-project-skills.mjs D:\Games\my-game
 ```
 
 安装到 `.agents/skills/`，默认拒绝覆盖同名技能，也拒绝链接或目录联接路径。不自动连接 Studio，不安装 Rojo，不写全局技能目录。
-
-也可用通用 skills CLI 从本地集合安装：
-
-```powershell
-npx skills add D:\Git\roblox-skills --list
-npx skills add D:\Git\roblox-skills --skill roblox-development-workflow roblox-game-workflow-control
-```
 
 根目录没有 `SKILL.md`，避免通用 CLI 在根入口提前停止扫描，导致子技能无法被发现。初始单技能模板已转为技能集合。源码已托管于 GitHub，`package.json` 保持 private，尚未发布 npm 包；上述 `npx skills` 命令运行 skills CLI，从 GitHub 拉取本仓库中的技能。
 
