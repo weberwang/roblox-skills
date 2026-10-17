@@ -11,6 +11,8 @@ description: 设计与实现 Roblox 游戏内 HUD、菜单、对话框、输入�
 
 新界面从 V0 开始，按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)完成 V1 定义和 V2 拆解后才进入正式 Edit 组合；每阶段交付、展示及退出核对完成后单步推进。复用全局美术方向须说明本界面的适用范围和剩余工作，不代表本界面已验收。运行技术结果和人工显示结论分别记录，缺用户判断保持人工 NOT_RUN。
 
+V2 必须按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)在冻结 V1 完整效果图上逐项编号框选，并用图内中文引线说明来源、父子/同组、布局装配和生产边界；直接展示图片。系统文本、可变数值、原生填充和复用组件也要覆盖，不能只列功能名或用组件树代替视觉图。内部组件身份和状态与 `decompositionRef` 对齐；正式实例路径在 V3 回读，不因框选位置猜父子关系。
+
 ## 职责与输入
 
 - 先检查 StarterGui、ScreenGui、已有 UI 模块、输入动作、文本本地化和设计规格；复用现有组件。

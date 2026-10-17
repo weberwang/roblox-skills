@@ -37,6 +37,8 @@ node scripts/workflow-control.mjs check-project --repo D:\Games\my-game
 
 `init` 只创建新 JSON，可见对象带一个未完成的 V0；缺少目标、实施包和证据是预期状态。`stage-template` 只导出当前阶段待填交付，不改变阶段。先完成实际交付和展示，再填写模板并运行 `complete-stage`；`advance-stage` 每次只进入下一阶段。禁止准备脚本改写 stage，或批量生成 V0–V3 完成记录。其余字段按[记录契约](references/record-contract.md)编辑。`status`、`stage-status`、`check`、`evidence-summary` 只读；`check` 未满足完成门时退出 1。检查结果仅说明记录约束，不证明真实阶段执行、引擎或人工验收通过。
 
+V2 模板另有待填 `decompositionRef`，必须指向[视觉拆解合同](../roblox-development-workflow/references/visual-decomposition.md)：绑定本对象 V1 效果图、稳定编号和各状态的中文框选标注图片，实际在回复中展示。检查器拒绝缺图或覆盖不全，不能仅凭摘要、架构图或批量记录完成 V2；图片和合同结构通过不等于用户视觉接受，也不改变 deliverables/manual 策略。
+
 ## 实施与证据
 
 - `planned → implementing → validating → complete`；缺依赖时记录 `blocked`，解除后继续原工作项。阶段工具只改变当前阶段的活动/完成记录及相邻 stage，不自动完成整个工作项，也不执行引擎命令。

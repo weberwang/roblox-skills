@@ -67,6 +67,8 @@ node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs ch
 
 新场景/显示层始终以 active V0 开始，按[阶段契约](roblox-game-workflow-control/references/stage-contract.md)逐步交付：`stage-status` 查看当前阶段，`stage-template --output <项目内JSON>` 导出待填交付，完成并展示实际内容后用 `complete-stage --delivery <项目内JSON>` 核对退出条件，再用 `advance-stage` 进入下一阶段。deliverables 允许连续推进，manual 另需真实逐阶段确认；两者都不能批量补齐阶段或直接设为 V4。
 
+V2 对齐 Unity 的可见对象拆解：在冻结 V1 完整效果图上做稳定编号框选与图内中文引线标注，并直接展示图片。内部结构、来源路线、消费、装配、生产边界和状态通过 `decompositionRef` 与图对应；缺图或覆盖不全不能完成 V2。具体格式和待填模板见[视觉拆解交付](roblox-development-workflow/references/visual-decomposition.md)，结构检查不代表人工视觉验收。
+
 当前工作项版本为 2：每条验收目标和计划检查都绑定当前证据，Studio 证据同时核对工作项、候选、Studio、Place、Universe 与采集时间。未发布工程回读得到的 Place/Universe 可以是 0，未知值保持 null。可见交付保留 V0–V4 产物、视觉目标合同、五项人工美术结论和适用动态情景；复杂交付另需独立领域审查。仅填写 PASS 或放入无关日志不能满足记录检查。
 
 情景的 technical 与 visual 分别记录技术覆盖和人工显示判断；缺当前候选的用户判断时，人工质量与情景保持 NOT_RUN。`evidence-summary` 只读汇总，既不补早期阶段，也不从 Play 成功生成视觉 PASS。结构检查不认证真实流程、引擎或人工验收。

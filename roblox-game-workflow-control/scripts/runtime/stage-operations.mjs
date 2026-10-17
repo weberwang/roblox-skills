@@ -1,7 +1,7 @@
 import { checkStages, createStageReview, STAGES } from "./stages.mjs";
 
 const DELIVERY_FIELDS = Object.freeze([
-  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef",
+  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "decompositionRef",
 ]);
 
 /** 运行阶段校验并返回 CLI 可展示的局部状态，不把结构通过解释成引擎验收。 */
@@ -32,6 +32,9 @@ export function completeCurrentStage(item, repo, delivery, { now = new Date().to
   if (!delivery || typeof delivery !== "object" || Array.isArray(delivery)) throw new Error("阶段完成必须提供交付对象");
   const unknown = Object.keys(delivery).filter((key) => !DELIVERY_FIELDS.includes(key));
   if (unknown.length) throw new Error(`阶段完成输入只允许交付字段，拒绝：${unknown.join(", ")}`);
+  if (Object.hasOwn(delivery, "decompositionRef") && current.stage !== "V2") {
+    throw new Error("只有 V2 阶段可以提交 decompositionRef");
+  }
   if (typeof now !== "string" || !Number.isFinite(Date.parse(now)) || Date.parse(now) > Date.now()) throw new Error("阶段 completedAt 必须是实际且不晚于当前的时间");
 
   const updated = structuredClone(item);

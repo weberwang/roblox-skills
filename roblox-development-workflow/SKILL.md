@@ -40,6 +40,8 @@ description: 使用 Roblox Studio 插件编排完整游戏开发或跨模块功�
 
 场景与显示层分别按 V0 分流、V1 定义、V2 拆解、V3 资源组合、V4 运行接入交付。按[视觉工作流](references/visual-workflow.md)、[响应式 UI](references/responsive-ui-contract.md)、[共享资源](references/shared-asset-usage.md)、[动画意图](references/animation-intent-contract.md)按需展开。先复用节点、组件与资源，复杂 UI 保持语义分组，不用单张概念图替代按钮和文本。
 
+V1 冻结当前对象各必要状态的完整效果图。V2 按[视觉拆解交付](references/visual-decomposition.md)从图反查全部显著特征，直接展示稳定编号框选、引线中文标注图片；原生文字、填充和复用项也标明来源、消费、装配与生产边界。内部合同用 `decompositionRef` 与图对齐，不能用架构图、文字表格或下载链接替代图片；V2 退出前不开始 V3 组合。阶段策略仍沿用 deliverables/manual，不将交图等同人工视觉 PASS。
+
 新可见工作项从 V0 开始，执行[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)：当前阶段实际交付、展示并核对退出条件后，才可推进下一阶段。V2 未退出前不开始正式 Edit 组合，V3 未退出前不把运行汇总当成 V4 完成。准备/证据汇总脚本不得提前设置 V2/V3/V4、批量补阶段或从运行成功推断早期交付。`deliverables` 可顺序连续推进，`manual` 逐阶段核对真实确认，二者均不能跳阶段。
 
 开始正式 Edit 组合前，实际运行 `stage-status` 并核对阶段链有效、当前为 V3；开始运行接入前核对当前为 V4。阶段检查不通过时先修复当前交付或缺失前置，不能继续实施后再补记录。当前阶段内返修仍回读受影响源和证据，保留失败与复验来源。

@@ -20,7 +20,7 @@
 | --- | --- |
 | V0 | `identity` 对象身份；`target` 目标；`scope` 范围；`host` 宿主；`dependencies` 依赖；`existingResources` 已有资源；`unknowns` 未知项 |
 | V1 | `playerFlow` 玩家流程；`states` 状态；`informationHierarchy` 信息层级；`layoutGoals` 布局目标；`visualReferences` 视觉参考；`acceptanceScope` 验收范围 |
-| V2 | `instanceStructure` 实例结构；`componentResponsibilities` 组件职责；`dataInterfaces` 数据接口；`resourceConsumption` 资源消费；`ownership` 所有权；`verificationPlan` 验证计划 |
+| V2 | `instanceStructure` 实例结构；`componentResponsibilities` 组件职责；`dataInterfaces` 数据接口；`resourceConsumption` 资源消费；`ownership` 所有权；`verificationPlan` 验证计划；`visualDecomposition` 冻结 V1 图的编号框选中文标注图及内部拆解合同 |
 | V3 | `editComposition` Edit 组合；`wiring` 引用接线；`sourceReadback` 正式源回读；`viewableDelivery` 可查看交付 |
 | V4 | `runtimeIntegration` 运行接入；`inputLifecycle` 输入与生命周期；`console` 日志；`dynamicCoverage` 动态覆盖；`humanDisplay` 人工显示验收 |
 
@@ -31,6 +31,10 @@
 `path` 指向项目内非空 Markdown 文件；`section` 填唯一 ATX 标题文本，不带 `#`。例如 Markdown 中为 `## V0 对象身份与范围`，记录填写 `V0 对象身份与范围`。标题之后、下一个同级或更高级标题之前必须有非空正文。多个阶段可以共用同一文件，但标题和正文必须独立，不能用同一章节重复冒充多个阶段。当前定位器只支持 Markdown ATX 标题。
 
 `presentedRef` 定位实际展示给协作者/用户的阶段交付或交付报告。已有成果可在 `reuse` 中说明 `sourceRef` 来源、`scope` 适用范围及 `remaining` 当前阶段尚需完成的工作。全局美术方向、另一场景或其他界面的确认不能冒充当前对象的交付和验收。
+
+V1 必须冻结本对象各必要状态的完整效果图；V2 记录另含 `decompositionRef`，指向[视觉拆解合同](../../roblox-development-workflow/references/visual-decomposition.md)的项目内 JSON。active V2 可保留空值；完成前核对本工作项已完成 V1 的源图身份/版本、图片文件、稳定组件编号及状态覆盖，禁止只填交付摘要就认定拆解完成。标注图须在回复中直接展示，图内中文引线说明视觉来源、消费、装配与生产边界；内部 Markdown、架构图、合同或下载链接不能替代。`stage-template` 仅在 V2 输出此待填引用，不生成图片、冻结来源或人工 PASS；`complete-stage` 和后续推进均检查合同。其余阶段不用该字段。
+
+V2 检查只证明合同与图片文件关系符合规则，不证明图片内容正确、来源已经人工确认或引擎通过；实际展示及必要视觉门须按真实过程核对。仍按 deliverables/manual 推进，不将新增图交付变成默认逐阶段人工审批。无当前用户判断时人工视觉结论保持 NOT_RUN。
 
 V0–V2 的有效记录不会因无关文案变更而要求候选号相同。V3 和 V4 必须绑定当前 candidate。V3 的 `evidenceIds` 至少包含一条当前候选 Edit readback；先核实目标的 Studio、Place、Universe 身份完整，再通过通用证据检查器校验工作项、Studio、Place、Universe、summary、ISO 采集时间、项目内非空文件及可选 `checkId`，并拒绝未来采集时间。空白、null 或 undefined 目标不能因与证据值相等而通过。正式源回读不由临时运行实例替代。
 

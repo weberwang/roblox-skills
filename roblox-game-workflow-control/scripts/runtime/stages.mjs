@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { extname } from "node:path";
 import { checkEvidence, STUDIO_EVIDENCE_TYPES } from "./evidence.mjs";
+import { validateDecomposition } from "./decomposition.mjs";
 import { projectPath } from "./io.mjs";
 
 /** 可见工作项按固定顺序推进；每项交付物对应一个可核对的完成条件。 */
@@ -10,7 +11,7 @@ export const STAGES = Object.freeze(["V0", "V1", "V2", "V3", "V4"]);
 export const STAGE_DELIVERABLES = Object.freeze({
   V0: Object.freeze(["identity", "target", "scope", "host", "dependencies", "existingResources", "unknowns"]),
   V1: Object.freeze(["playerFlow", "states", "informationHierarchy", "layoutGoals", "visualReferences", "acceptanceScope"]),
-  V2: Object.freeze(["instanceStructure", "componentResponsibilities", "dataInterfaces", "resourceConsumption", "ownership", "verificationPlan"]),
+  V2: Object.freeze(["instanceStructure", "componentResponsibilities", "dataInterfaces", "resourceConsumption", "ownership", "verificationPlan", "visualDecomposition"]),
   V3: Object.freeze(["editComposition", "wiring", "sourceReadback", "viewableDelivery"]),
   V4: Object.freeze(["runtimeIntegration", "inputLifecycle", "console", "dynamicCoverage", "humanDisplay"]),
 });
@@ -53,6 +54,7 @@ export function createStageReview(item, stage, now = new Date().toISOString()) {
     evidenceIds: [],
     userMessageRef: "",
     exitCheckHistory: [],
+    ...(stage === "V2" ? { decompositionRef: "" } : {}),
   };
 }
 
@@ -189,6 +191,11 @@ function checkInProgressShape(review, context) {
   for (const key of ["path", "section", "presentedRef", "nextAction", "userMessageRef"]) {
     report(context, typeof review[key] === "string", `阶段 ${key} 必须为文本：${review.stage}`);
   }
+  if (review.stage === "V2") {
+    report(context, typeof review.decompositionRef === "string", "V2 decompositionRef 必须为文本");
+  } else {
+    report(context, !Object.hasOwn(review, "decompositionRef"), `只有 V2 阶段可以记录 decompositionRef：${review.stage}`);
+  }
   report(context, Array.isArray(review.remainingIssues), `阶段 remainingIssues 必须是数组：${review.stage}`);
   report(context, Array.isArray(review.reuse), `阶段 reuse 必须是数组：${review.stage}`);
   checkReuse(review, context);
@@ -221,11 +228,30 @@ function checkCompletedReview(item, review, context, repo) {
   report(context, Array.isArray(review.evidenceIds) && review.evidenceIds.every(hasText), `阶段 evidenceIds 必须是文本数组：${review.stage}`);
   if (review.exitCheckHistory !== undefined) report(context, Array.isArray(review.exitCheckHistory), `阶段 exitCheckHistory 必须是数组：${review.stage}`);
   checkReuse(review, context);
+  if (review.stage === "V2") checkDecompositionDelivery(item, review, context, repo);
   if (item.stagePolicy === "manual") report(context, hasText(review.userMessageRef), `manual 阶段必须记录真实用户确认：${review.stage}`, true);
   if (["V3", "V4"].includes(review.stage)) {
     report(context, review.candidate === item.candidate, `${review.stage} 必须绑定当前候选`);
   }
   if (review.stage === "V3") checkEditReadback(item, review, context, repo);
+}
+
+/** V2 必须指向有效拆解合同；合同仅校验结构和图片元数据，不代替人工看图。 */
+function checkDecompositionDelivery(item, review, context, repo) {
+  report(context, hasText(review.decompositionRef), "V2 必须提供拆解合同 decompositionRef");
+  if (!hasText(review.decompositionRef)) return;
+  if (extname(review.decompositionRef).toLowerCase() !== ".json") {
+    report(context, false, "V2 decompositionRef 必须指向项目内 JSON 合同");
+    return;
+  }
+  try {
+    const path = projectPath(repo, review.decompositionRef);
+    const file = statSync(path);
+    if (!file.isFile() || file.size === 0) throw new Error("拆解合同文件缺失或为空");
+    validateDecomposition(repo, item, review, JSON.parse(readFileSync(path, "utf8")));
+  } catch (error) {
+    report(context, false, `V2 拆解合同无效：${error.message}`);
+  }
 }
 
 /** 复用已有成果时必须指出来源、适用范围和本阶段仍要完成的内容。 */

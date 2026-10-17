@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { createWorkItem } from "../roblox-game-workflow-control/scripts/workflow-control.mjs";
 import { createStageReview, STAGE_DELIVERABLES } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
 import { advanceStage, completeCurrentStage } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
+import { createDecompositionFixture } from "./decomposition-fixture.mjs";
 
 /** 在具名隔离目录中执行测试，清理前验证最终绝对路径的归属。 */
 export function inProject(callback) {
@@ -71,6 +72,7 @@ export function fixture(root, type = "PROJECT") {
         exitChecks: keys.map((id) => ({ id, result: "PASS", basis: `测试依据 ${id}` })),
         presentedRef: `${stagePath}#${stage}`, remainingIssues: [], nextAction: "仅用于测试后续推进", reuse: [],
         evidenceIds: stage === "V3" ? ["readback"] : stage === "V4" ? ["readback", "console", "play", "visual"] : [], userMessageRef: "" };
+      if (stage === "V2") delivery.decompositionRef = createDecompositionFixture(root, item, item.stageReviews.at(-1)).path;
       item = completeCurrentStage(item, root, delivery, { now: `2026-10-16T00:00:${String(index * 2 + 1).padStart(2, "0")}.000Z`, validateExit: () => true });
       if (stage !== "V4") item = advanceStage(item, root, { now: `2026-10-16T00:00:${String(index * 2 + 2).padStart(2, "0")}.000Z` });
     }

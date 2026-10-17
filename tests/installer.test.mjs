@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { SKILLS } from "../scripts/catalog.mjs";
 import { installSkills } from "../scripts/install-project-skills.mjs";
-import { inProject } from "./helpers.mjs";
+import { fixture, inProject } from "./helpers.mjs";
 
 test("安装全部技能、引用和控制运行时，可从安装后的目录运行 CLI", () => inProject((root) => {
   assert.equal(installSkills(root).length, SKILLS.length);
@@ -36,6 +36,32 @@ test("先检查全部冲突，拒绝覆盖时不发生部分安装", () => inPro
   assert.throws(() => installSkills(root), /拒绝覆盖/);
   assert.equal(readFileSync(join(existing, "keep.txt"), "utf8"), "保留已有修改");
   assert.equal(existsSync(join(root, ".agents/skills", SKILLS[0])), false);
+}));
+
+test("安装后的 V2 检查拒绝缺失标注图片及未填写的拆解模板", () => inProject((root) => {
+  installSkills(root);
+  const item = fixture(root, "SCENE");
+  const cli = join(root, ".agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs");
+  const recordDirectory = join(root, ".workflow-control/work-items");
+  mkdirSync(recordDirectory, { recursive: true });
+  const recordPath = join(recordDirectory, `${item.id}.json`);
+  writeFileSync(recordPath, JSON.stringify(item));
+  // 使用已安装入口检查整个阶段链，确保打包后的依赖并非仅在仓库源码路径可用。
+  const status = () => spawnSync(process.execPath, [cli, "stage-status", "--repo", root, "--id", item.id], { encoding: "utf8" });
+  const valid = status();
+  assert.equal(valid.status, 0, valid.stderr);
+  assert.equal(JSON.parse(valid.stdout).valid, true, valid.stdout);
+  const review = item.stageReviews.find((entry) => entry.stage === "V2");
+  const contract = JSON.parse(readFileSync(join(root, review.decompositionRef), "utf8"));
+  unlinkSync(join(root, contract.previews[0].path));
+  const missing = JSON.parse(status().stdout);
+  assert.equal(missing.valid, false);
+  assert.ok(missing.errors.some((message) => /V2|拆解/.test(message)), missing.errors.join("\n"));
+  review.decompositionRef = ".agents/skills/roblox-development-workflow/assets/templates/visual-decomposition.json";
+  writeFileSync(recordPath, JSON.stringify(item));
+  const blank = JSON.parse(status().stdout);
+  assert.equal(blank.valid, false);
+  assert.ok(blank.errors.some((message) => /V2|拆解/.test(message)), blank.errors.join("\n"));
 }));
 
 test("安装拒绝目录联接、普通文件和不存在项目", () => inProject((root) => {

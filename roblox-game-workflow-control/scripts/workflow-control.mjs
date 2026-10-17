@@ -112,6 +112,7 @@ function main() {
     const review = item.stageReviews?.at(-1);
     if (!review || review.stage !== item.stage || review.status !== "active") throw new Error("当前阶段必须先有 active 记录");
     const fields = ["path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef"];
+    if (review.stage === "V2") fields.push("decompositionRef");
     const delivery = Object.fromEntries(fields.map((key) => [key, structuredClone(review[key])]));
     console.log(writeNewJson(options.repo, options.output, delivery));
     return;

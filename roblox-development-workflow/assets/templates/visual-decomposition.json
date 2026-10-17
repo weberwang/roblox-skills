@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "workItemId": "",
+  "candidate": "",
+  "sourceImages": [
+    {
+      "id": "",
+      "stageReviewId": "",
+      "candidate": "",
+      "version": "",
+      "path": "",
+      "width": null,
+      "height": null,
+      "state": "",
+      "frozenRef": ""
+    }
+  ],
+  "components": [
+    {
+      "componentId": "",
+      "elementIndex": null,
+      "purpose": "",
+      "visualFeatures": "",
+      "productionRoute": "",
+      "sourceRef": "",
+      "consumerNodeId": "",
+      "parentId": null,
+      "group": null,
+      "assembly": "",
+      "layoutRef": "",
+      "productionBoundary": "",
+      "owner": "",
+      "states": []
+    }
+  ],
+  "previews": [
+    {
+      "path": "",
+      "sourceImageId": "",
+      "presentedRef": "",
+      "annotations": [
+        {
+          "componentId": "",
+          "label": "",
+          "bounds": { "x": null, "y": null, "width": null, "height": null }
+        }
+      ]
+    }
+  ],
+  "coverage": { "allSignificantElementsMapped": false, "exclusions": [] }
+}

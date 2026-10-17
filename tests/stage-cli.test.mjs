@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { inProject } from "./helpers.mjs";
+import { createDecompositionFixture } from "./decomposition-fixture.mjs";
 import { replaceJson } from "../roblox-game-workflow-control/scripts/runtime/io.mjs";
 
 const cli = resolve("roblox-game-workflow-control/scripts/workflow-control.mjs");
@@ -20,9 +21,12 @@ function load(root) { return JSON.parse(readFileSync(join(root, ".workflow-contr
 function delivery(root, stage, userMessageRef = "") {
   mkdirSync(join(root, "docs"), { recursive: true });
   const path = `docs/${stage}.json`;
+  const item = load(root);
   const template = run(root, "stage-template", "--output", path);
   assert.equal(template.status, 0, template.stderr);
   const result = JSON.parse(readFileSync(join(root, path), "utf8"));
+  if (stage === "V2") assert.equal(result.decompositionRef, "", "V2 模板只提供空字段，不替用户填入来源事实");
+  else assert.equal(Object.hasOwn(result, "decompositionRef"), false, "其他阶段不应提供 V2 专属字段");
   result.path = "docs/stage-deliveries.md";
   result.section = stage;
   writeFileSync(join(root, result.path), `# ${stage}\n\n${stage} 的测试交付正文，仅测试记录结构。\n\n`, { flag: stage === "V0" ? "w" : "a" });
@@ -31,6 +35,7 @@ function delivery(root, stage, userMessageRef = "") {
   result.presentedRef = `test-presentation-${stage}`;
   result.nextAction = "测试下一阶段";
   result.userMessageRef = userMessageRef;
+  if (stage === "V2") result.decompositionRef = createDecompositionFixture(root, item, item.stageReviews.at(-1)).path;
   writeFileSync(join(root, path), JSON.stringify(result));
   return path;
 }
@@ -48,6 +53,41 @@ test("CLI初始化两类可见工作项为active V0且人工结果均NOT_RUN", (
     assert.ok(item.visualReview.scenarios.every((entry) => entry.visual.result === "NOT_RUN"));
   });
 });
+
+test("CLI要求V2有效拆解合同并保留manual真实确认门", () => inProject((root) => {
+  assert.equal(run(root, "init", "--type", "SCENE", "--objective", "测试 V2 标注图交付").status, 0);
+  const itemPath = join(root, ".workflow-control/work-items/scene.json");
+  const item = load(root);
+  item.stagePolicy = "manual";
+  writeFileSync(itemPath, JSON.stringify(item));
+
+  for (const stage of ["V0", "V1"]) {
+    const path = delivery(root, stage, `test-user-confirmation-${stage}`);
+    assert.equal(run(root, "complete-stage", "--delivery", path).status, 0);
+    assert.equal(run(root, "advance-stage").status, 0);
+  }
+
+  const missingPath = delivery(root, "V2");
+  const missing = JSON.parse(readFileSync(join(root, missingPath), "utf8"));
+  delete missing.decompositionRef;
+  writeFileSync(join(root, missingPath), JSON.stringify(missing));
+  const before = readFileSync(itemPath, "utf8");
+  assert.equal(run(root, "complete-stage", "--delivery", missingPath).status, 1);
+  assert.equal(readFileSync(itemPath, "utf8"), before, "缺合同不能更改活动 V2 记录");
+
+  const manualPath = missingPath;
+  const manual = JSON.parse(readFileSync(join(root, manualPath), "utf8"));
+  manual.decompositionRef = createDecompositionFixture(root, load(root), load(root).stageReviews.at(-1)).path;
+  writeFileSync(join(root, manualPath), JSON.stringify(manual));
+  assert.ok(manual.decompositionRef, "V2 模板字段可绑定已生成的合同路径");
+  assert.equal(run(root, "complete-stage", "--delivery", manualPath).status, 1, "有效技术结构不代替 V2 人工确认");
+  manual.userMessageRef = "test-user-confirmation-V2";
+  writeFileSync(join(root, manualPath), JSON.stringify(manual));
+  assert.equal(run(root, "complete-stage", "--delivery", manualPath).status, 0);
+  assert.equal(load(root).stageReviews.at(-1).decompositionRef, manual.decompositionRef);
+  assert.equal(run(root, "advance-stage").status, 0);
+  assert.equal(load(root).stage, "V3");
+}));
 
 test("CLI模板不改阶段，deliverables可逐阶段推进且拒绝直接指定V4", () => inProject((root) => {
   assert.equal(run(root, "init", "--type", "SCENE", "--objective", "测试逐步推进").status, 0);

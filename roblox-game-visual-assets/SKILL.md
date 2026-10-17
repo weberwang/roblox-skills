@@ -11,6 +11,8 @@ description: 规划、查找、审查并接入 Roblox 的模型、材质、贴�
 
 资源组合属于具体可见对象的 V3，开始正式 Edit 组合前核对其 V0–V2 退出与复用范围；生成资源成功或全局方向批准不能补齐对象阶段，也不证明消费界面已验收。按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)分别保留组合交付、正式源回读与当前仍需完成内容。
 
+V2 先按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)从冻结 V1 图枚举显著特征，确定图片、Roblox 原生、复用、模型、材质或特效路线，并在编号中文标注图中写明消费与生产边界。复用公共资产仍保留本地拆解编号及公共修订；原生项和原子资产内部特征也不能遗漏。图片交给 image_generator 制作并直接展示；禁止裁切效果图充当正式资源，不能因程序能绘制就降级特色视觉。
+
 按[资源消费绑定](../roblox-game-workflow-control/references/asset-bindings.md)登记资源修订、当前/历史消费者及消费工作项的 Edit 回读；资源换版、退役或许可失效时，先处理实际受影响消费者，不以生产者 PASS 代替消费验收。
 
 ## 职责与输入

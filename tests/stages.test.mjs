@@ -5,6 +5,7 @@ import test from "node:test";
 import { inProject } from "./helpers.mjs";
 import { advanceStage, completeCurrentStage, stageStatus } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
 import { createStageReview, STAGE_DELIVERABLES, STAGES } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
+import { createDecompositionFixture } from "./decomposition-fixture.mjs";
 
 const origin = Date.now() - 120_000;
 /** 将固定偏移转换为测试用 ISO 时间，避免依赖执行时的耗时。 */
@@ -30,9 +31,9 @@ function writeStageDocument(root) {
 }
 
 /** 生成具备逐项交付和退出依据的阶段完成记录，时间由测试夹具明确提供。 */
-function completeRecord(item, stage, startOffset, endOffset, path, { candidate = item.candidate, userMessageRef = "", evidenceIds = [] } = {}) {
+function completeRecord(item, stage, startOffset, endOffset, path, { root, candidate = item.candidate, userMessageRef = "", evidenceIds = [] } = {}) {
   const review = createStageReview(item, stage, stamp(startOffset));
-  return {
+  const record = {
     ...review,
     candidate,
     status: "complete",
@@ -48,6 +49,8 @@ function completeRecord(item, stage, startOffset, endOffset, path, { candidate =
     evidenceIds,
     userMessageRef,
   };
+  if (stage === "V2") record.decompositionRef = createDecompositionFixture(root, item, record).path;
+  return record;
 }
 
 /** 将V3所需Edit证据绑定到当前工作项目标和候选。 */
@@ -62,7 +65,7 @@ function addReadback(item, observedOffset = 20_000) {
 function v3Fixture(root) {
   const path = writeStageDocument(root);
   const item = stageItem();
-  completedPrefix(item, 3, path);
+  completedPrefix(item, 3, path, { root });
   item.stage = "V3";
   item.stageReviews.push(createStageReview(item, "V3", stamp(7_000)));
   const delivery = {
@@ -75,10 +78,14 @@ function v3Fixture(root) {
 }
 
 /** 直接完成指定前缀，供顺序和候选保留场景使用。 */
-function completedPrefix(item, count, path, { manual = false } = {}) {
-  item.stageReviews = STAGES.slice(0, count).map((stage, index) => completeRecord(item, stage, index * 2_000, index * 2_000 + 1_000,
-    path, { userMessageRef: manual ? `user-confirmed-${stage}` : "" }));
-  if (count) item.stage = item.stageReviews.at(-1).stage;
+function completedPrefix(item, count, path, { manual = false, root } = {}) {
+  item.stageReviews = [];
+  for (const [index, stage] of STAGES.slice(0, count).entries()) {
+    const record = completeRecord(item, stage, index * 2_000, index * 2_000 + 1_000,
+      path, { root, userMessageRef: manual ? `user-confirmed-${stage}` : "" });
+    item.stageReviews.push(record);
+    item.stage = stage;
+  }
 }
 
 test("新阶段记录从V0开始并带实际active槽位", () => {
@@ -130,6 +137,7 @@ test("deliverables可连续逐阶段完成和推进且不需要用户批准", ()
       presentedRef: `展示记录 ${stage}`, remainingIssues: [], nextAction: stage === "V4" ? "结算" : "继续下一阶段",
       reuse: [], evidenceIds: [],
     };
+    if (stage === "V2") delivery.decompositionRef = createDecompositionFixture(root, current, current.stageReviews.at(-1)).path;
     if (stage === "V3") {
       addReadback(current, clock + 250);
       delivery.evidenceIds = ["readback-v3"];
@@ -167,6 +175,12 @@ test("manual策略没有真实用户引用时不能完成", () => inProject((roo
   assert.equal(item.stageReviews[0].status, "active", "失败不能改写原工作项");
 }));
 
+test("只有V2接受decompositionRef，其他阶段不能夹带该字段", () => inProject((root) => {
+  const item = stageItem();
+  assert.throws(() => completeCurrentStage(item, root, { decompositionRef: "fixtures/decomposition.json" }), /只有 V2 阶段/);
+  assert.equal(item.stageReviews[0].status, "active");
+}));
+
 test("缺失或拼错stagePolicy会阻断阶段检查和推进", () => inProject((root) => {
   const item = stageItem();
   for (const policy of [undefined, "manaul"]) {
@@ -192,7 +206,7 @@ test("阶段操作拒绝伪带stageReviews的非可见工作项", () => inProjec
 test("V3没有当前候选Edit readback时不能完成", () => inProject((root) => {
   const path = writeStageDocument(root);
   const item = stageItem();
-  completedPrefix(item, 3, path);
+  completedPrefix(item, 3, path, { root });
   item.stage = "V3";
   item.stageReviews.push(createStageReview(item, "V3", stamp(7_000)));
   const delivery = {
