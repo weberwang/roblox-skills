@@ -42,6 +42,8 @@ StudioTestService.ExecuteMultiplayerTestAsync 需要 PluginSecurity；当前 exe
 
 search_asset 库存查询一次只接受一种资源类型，缺省为 Model；Package 单独查询。可见库存不等于跨所有者使用授权。generate_mesh 显式分件最多 8 项、三角形参数范围 12–20,000；这与 segment_mesh 的 5 项上限不同。generate_texture 的 Quality 预览仅支持单 MeshPart；写入前记录原位替换的影响和还原信息。
 
+模型选型与实际生产使用[3D 模型 V2/V3 流程](model-production.md)。当前 generate_mesh 只声明文本提示，没有参考图参数；generate_procedural_model 支持真实 attachedImageUri 并自动插入 Workspace。store_image 输入为本地 PNG/JPG/JPEG、最大 5 MB，返回 IMAGEID；不能将其与 generate_texture 的 hintImage 对象混用。后台任务的单写者与重试规则见[执行契约](studio-execution.md)。
+
 ## 官方入口
 
 - [客户端与服务端](https://create.roblox.com/docs/projects/client-server)
@@ -50,4 +52,4 @@ search_asset 库存查询一次只接受一种资源类型，缺省为 Model；P
 - [数据存储](https://create.roblox.com/docs/cloud-services/data-stores)
 - [发布游戏与 Place](https://create.roblox.com/docs/production/publishing/publish-games-and-places)
 
-参考核实日期：2026-10-16。插件连接已经验证并不代表以上各项能力均已实测。
+模型相关工具定义核实日期：2026-10-18；其余条目参考核实日期：2026-10-16。读取工具定义或验证连接不代表各项能力均已实测。

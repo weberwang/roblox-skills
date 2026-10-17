@@ -26,6 +26,8 @@
 
 架构内容按[架构阶段交付](../../roblox-development-workflow/references/foundation-integration.md#架构在-v0v4-中的交付)落入上述既有槽位：V2 的实例结构与职责说明服务端/客户端/共享归属，数据接口说明 Remote 方向及校验，资源消费和所有权列出实际消费者与状态所有者，验证计划覆盖依赖、启动、重生/退出及相关拒绝路径。TDD 和模块清单可作为分阶段交付的引用来源；未涉及的系统明确说明，不另加架构状态机或额外人工门。
 
+3D 模型按[模型阶段交付](../../roblox-development-workflow/references/model-production.md)落实到同一槽位：V2 明确具体生产方法与参数、参考、部件、预算和回读计划；V3 的组合/接线/正式回读/可查看交付分别记录真实生成终态、产物审查、装配、资源消费及 Edit 属性依据。可用[内部模板](../../roblox-development-workflow/assets/templates/model-production.md)定位独立 V2/V3 章节，不增字段或默认审批。当前阶段检查只要求有效通用 readback，不逐字段认证模型报告；整体工作项检查才核对已声明资源消费绑定。不能把阶段 canAdvance 表述为模型已经生成、接入或质量验收通过。
+
 每条阶段记录还包含稳定唯一 `id`、`workItemId`、`candidate`、`status`、`startedAt`、`completedAt`、`path`、`section`、`presentedRef`、`remainingIssues`、`nextAction`、`reuse`、`evidenceIds` 与 `userMessageRef`。开始时间必须是有效且不晚于当前的 ISO 时间；完成时间不早于开始时间，下一阶段开始时间不早于前一阶段完成时间。每个阶段必须有自己的实际开始时间，检查器不会代填时间。
 
 `path` 指向项目内非空 Markdown 文件；`section` 填唯一 ATX 标题文本，不带 `#`。例如 Markdown 中为 `## V0 对象身份与范围`，记录填写 `V0 对象身份与范围`。标题之后、下一个同级或更高级标题之前必须有非空正文。多个阶段可以共用同一文件，但标题和正文必须独立，不能用同一章节重复冒充多个阶段。当前定位器只支持 Markdown ATX 标题。

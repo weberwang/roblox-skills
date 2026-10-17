@@ -22,10 +22,12 @@
 
 开始生成/导入前检查插件当前 schema，并在批准的目标 Studio 中确认写入位置、预期结果和现有引用。常用路线应按目标选择：
 
+V2 的具体选型、参数、参考输入和 V3 完整生产步骤见[3D 模型生产与接入](model-production.md)。本页维护公共资源身份与共享边界，生产规格写入原阶段文档；不要把两者复制为第二份资源账本。
+
 | 需求 | 当前工具事实与接入规则 |
 | --- | --- |
 | 文本生成网格 | `generate_mesh` 生成带纹理的网格。按当前 schema 传参；显式分段最多 8 个部件，`maxTriangles` 范围为 12–20000。完成后仍要核实实际 Model/路径、尺寸、轴向、Pivot、碰撞、材质、贴图和目标设备预算。 |
-| 可调程序化模型 | `generate_procedural_model` 以基础几何创建带可调属性的 Model，并自动插入 Workspace。它不是外部资产许可或脚本审查的替代品；完成后读取新实例和子级，确认对象没有意外与运行场景耦合。 |
+| 可调程序化模型 | `generate_procedural_model` 以基础几何创建带可调属性的模型，默认 async=true，并自动插入 Workspace。参考图通过真实 `attachedImageUri` 传入，prompt 沿用用户原话；完成后读取新实例、属性、脚本和子级，不重复再创建或默认已通过许可/脚本审查。 |
 | 网格拆分 | `segment_mesh` 接收既有 MeshPart/Model 和最多 5 个名称，返回含分段的**新 Model**并插在源对象同级。保留源对象，记录新旧路径与消费者；分段名称或几何不证明已经存在 Rig、Motor6D/Bone、UV、蒙皮或动画。 |
 | 材质变体 | `generate_material` 返回的 `BaseMaterial` 与变体名必须同时对应 BasePart 的 `Material` 与 `MaterialVariant`。只记录工具返回的真实配对并回读消费者；名称相似不能代替 BaseMaterial 一致。 |
 | 网格贴图替换 | `generate_texture` 在源 MeshPart/Model 上原位替换外观；Quality 模式目前只支持单 MeshPart。先确认目标是独占版本而非共享源，记录原状态/实际路径，替换后重查所有真实消费者。 |
