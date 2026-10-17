@@ -3,6 +3,8 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { createWorkItem } from "../roblox-game-workflow-control/scripts/workflow-control.mjs";
+import { createStageReview, STAGE_DELIVERABLES } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
+import { advanceStage, completeCurrentStage } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
 
 /** 在具名隔离目录中执行测试，清理前验证最终绝对路径的归属。 */
 export function inProject(callback) {
@@ -16,7 +18,7 @@ export function inProject(callback) {
 
 /** 构造有真实本地产物的测试记录，不连接 Studio，也不声称游戏运行通过。 */
 export function fixture(root, type = "PROJECT") {
-  const item = createWorkItem("test-loop", "测试用交付记录", type);
+  let item = createWorkItem("test-loop", "测试用交付记录", type);
   item.target.studioId = "test-studio";
   item.target.placeId = 0;
   item.target.universeId = 0;
@@ -27,7 +29,6 @@ export function fixture(root, type = "PROJECT") {
     verification: item.requiredEvidence.map((type) => ({ id: type, description: "仅测试本地记录校验", evidenceType: type })), stopConditions: ["不连接 Studio"],
   };
   if (type === "DISPLAY_LAYER") item.hostSceneId = "main-scene";
-  if (["SCENE", "DISPLAY_LAYER"].includes(type)) item.stage = "V4";
   mkdirSync(join(root, "evidence"), { recursive: true });
   for (const evidenceType of item.requiredEvidence) {
     const path = `evidence/${evidenceType}.txt`;
@@ -51,11 +52,28 @@ export function fixture(root, type = "PROJECT") {
     play.datamodel = "Client";
     play.coverage = { revision: 1, caseId: "desktop-normal", viewportId: "desktop", width: 1280, height: 720,
       input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" };
-    item.stageReviews = ["V0", "V1", "V2", "V3", "V4"].map((stage) => ({ stage, workItemId: item.id, candidate: item.candidate, path: item.visualContractRef }));
     item.visualReview = { status: "accepted", candidate: item.candidate, evidenceId: "visual", userMessageRef: "test-fixture-only",
-      qualityResults: Object.fromEntries(["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"].map((key) => [key, { status: "PASS", reason: "仅本地测试夹具" }])),
-      scenarios: ["normal-play", "repeated-feedback", "event-peak", "overlap-peak"].map((id) => ({ id, required: id === "normal-play", result: id === "normal-play" ? "PASS" : "NOT_APPLICABLE", evidenceIds: id === "normal-play" ? ["play"] : [], reason: "仅测试本地契约" })),
+      qualityResults: Object.fromEntries(["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"].map((key) => [key, { status: "PASS", reason: "仅本地测试夹具", userMessageRef: "test-fixture-only" }])),
+      scenarios: ["normal-play", "repeated-feedback", "event-peak", "overlap-peak"].map((id) => ({ id, required: id === "normal-play", reason: "仅测试本地契约",
+        technical: { result: id === "normal-play" ? "PASS" : "NOT_APPLICABLE", evidenceIds: id === "normal-play" ? ["play"] : [] },
+        visual: { result: id === "normal-play" ? "PASS" : "NOT_APPLICABLE", evidenceIds: id === "normal-play" ? ["visual"] : [],
+          userMessageRef: id === "normal-play" ? "test-fixture-only" : "", reason: "仅测试人工声明的结构" } })),
     };
+    // 夹具走相同的单阶段完成/推进接口；固定时间仅模拟测试历史，不作为游戏执行证据。
+    item.stageReviews = [createStageReview(item, "V0", "2026-10-16T00:00:00.000Z")];
+    const stages = ["V0", "V1", "V2", "V3", "V4"];
+    const stagePath = "evidence/stage-deliveries.md";
+    for (const [index, stage] of stages.entries()) {
+      writeFileSync(join(root, stagePath), `# ${stage}\n\n仅用于本地测试的 ${stage} 独立交付正文。\n\n`, { flag: index ? "a" : "w" });
+      const keys = STAGE_DELIVERABLES[stage];
+      const delivery = { path: stagePath, section: stage,
+        deliverables: keys.map((id) => ({ id, summary: `测试交付 ${id}` })),
+        exitChecks: keys.map((id) => ({ id, result: "PASS", basis: `测试依据 ${id}` })),
+        presentedRef: `${stagePath}#${stage}`, remainingIssues: [], nextAction: "仅用于测试后续推进", reuse: [],
+        evidenceIds: stage === "V3" ? ["readback"] : stage === "V4" ? ["readback", "console", "play", "visual"] : [], userMessageRef: "" };
+      item = completeCurrentStage(item, root, delivery, { now: `2026-10-16T00:00:${String(index * 2 + 1).padStart(2, "0")}.000Z`, validateExit: () => true });
+      if (stage !== "V4") item = advanceStage(item, root, { now: `2026-10-16T00:00:${String(index * 2 + 2).padStart(2, "0")}.000Z` });
+    }
   }
   return item;
 }

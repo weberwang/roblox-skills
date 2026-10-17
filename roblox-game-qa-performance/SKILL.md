@@ -9,6 +9,8 @@ description: 规划或执行 Roblox 功能回归、安全边界、稳定性和�
 
 可见体验按[响应式 UI 合同](../roblox-development-workflow/references/responsive-ui-contract.md)覆盖真实目标矩阵，并按[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)记录五项人工质量结论及四类动态情境。机器只核对字段、技术参数和真实运行证据；截图由用户检查，技术 `PASS` 不得自动写成视觉 `PASS`。
 
+汇总前核对[阶段交付](../roblox-game-workflow-control/references/stage-contract.md)确已顺序退出，不能用运行证据反填 V0–V3。情景 `technical` 保存 Play/断言结果，`visual` 保存独立的当前候选用户判断；没有用户判断时仍为 NOT_RUN。保留失败、修复与复验记录，不把旧 FAIL 改写为 PASS；结构 ready 不能表述为过程正确或引擎已通过。
+
 按[覆盖契约](../roblox-game-workflow-control/references/coverage-contract.md)逐行绑定批准用例与实际 Client 测量，禁止把一份 Play 复用于其他视口或情景。项目整体交付按[项目依赖契约](../roblox-game-workflow-control/references/project-contract.md)运行 `check-project`；多 Place 仅显式启用后检查关系契约与真实运行证据，单客户端和单 Place 证据不能代替跨 Place 结论。
 
 ## 职责与输入

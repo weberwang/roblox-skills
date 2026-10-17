@@ -9,6 +9,8 @@ description: 规划、查找、审查并接入 Roblox 的模型、材质、贴�
 
 先按[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)读取当前视觉基线，再按[共享资源登记与使用](../roblox-development-workflow/references/shared-asset-usage.md)查单一资源总表、消费者、许可和实际路径。模型生成、切分、材质配对、原位贴图替换及资源就绪边界均以该参考中的当前 Studio 工具事实为准。
 
+资源组合属于具体可见对象的 V3，开始正式 Edit 组合前核对其 V0–V2 退出与复用范围；生成资源成功或全局方向批准不能补齐对象阶段，也不证明消费界面已验收。按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)分别保留组合交付、正式源回读与当前仍需完成内容。
+
 按[资源消费绑定](../roblox-game-workflow-control/references/asset-bindings.md)登记资源修订、当前/历史消费者及消费工作项的 Edit 回读；资源换版、退役或许可失效时，先处理实际受影响消费者，不以生产者 PASS 代替消费验收。
 
 ## 职责与输入

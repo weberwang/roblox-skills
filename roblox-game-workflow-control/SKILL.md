@@ -11,7 +11,7 @@ description: 管理 Roblox 游戏开发的工作项、范围、实施包、证�
 
 1. 先读已有 `.workflow-control/work-items/`、项目说明和用户当前目标，复用同一工作项；不要为返修重建工作项。
 2. 将范围拆成 `PROJECT`、`FOUNDATION`、`SCENE`、`DISPLAY_LAYER`、`INTEGRATION` 或 `RELEASE`。场景含常驻 HUD；弹窗、抽屉、Toast 使用独立显示层工作项，`hostSceneId` 只记录宿主。
-3. 普通小修从受影响步骤开始，不强制先完成整个项目流程。六阶段是用户视图，V0–V4 是可见对象的生产闭环；版本 2 记录逐项验收结果和计划检查覆盖，不以目标文案代替完成结论。
+3. 每个新 `SCENE`／`DISPLAY_LAYER` 必须从 V0 开始，按[阶段契约](references/stage-contract.md)逐阶段交付、展示并核对退出条件，再单步推进。已有工作项返修可恢复最早受影响阶段；复用成果须记录来源、适用范围与仍需完成内容，不能把新工作项直接设为 V2/V3/V4。
 4. 生产实施前填入准确目标 Studio、源数据归属、允许文件/实例、实施单元所有者、验证计划与停止条件。
 5. 所有 Studio 写入保持单写者；并行代理可以探索、研究、编写不冲突的本地文件或独立审查。
 
@@ -27,15 +27,19 @@ description: 管理 Roblox 游戏开发的工作项、范围、实施包、证�
 node scripts/workflow-control.mjs init --repo D:\Games\my-game --id first-loop --type SCENE --objective "完成首个可游玩循环"
 node scripts/workflow-control.mjs status --repo D:\Games\my-game --id first-loop
 node scripts/workflow-control.mjs check --repo D:\Games\my-game --id first-loop
+node scripts/workflow-control.mjs stage-status --repo D:\Games\my-game --id first-loop
+node scripts/workflow-control.mjs stage-template --repo D:\Games\my-game --id first-loop --output docs/first-loop-v0-delivery.json
+node scripts/workflow-control.mjs complete-stage --repo D:\Games\my-game --id first-loop --delivery docs/first-loop-v0-delivery.json
+node scripts/workflow-control.mjs advance-stage --repo D:\Games\my-game --id first-loop
 node scripts/workflow-control.mjs init-project --repo D:\Games\my-game --project-id my-game
 node scripts/workflow-control.mjs check-project --repo D:\Games\my-game
 ```
 
-`init` 只创建新 JSON，不覆盖旧文件；初始化后缺少目标、实施包和证据是预期状态。`status` 和 `check` 只读。`check` 未满足交付门时退出码为 1。字段按 [记录契约](references/record-contract.md) 使用正常文件工具编辑，状态变化要有事实支持。
+`init` 只创建新 JSON，可见对象带一个未完成的 V0；缺少目标、实施包和证据是预期状态。`stage-template` 只导出当前阶段待填交付，不改变阶段。先完成实际交付和展示，再填写模板并运行 `complete-stage`；`advance-stage` 每次只进入下一阶段。禁止准备脚本改写 stage，或批量生成 V0–V3 完成记录。其余字段按[记录契约](references/record-contract.md)编辑。`status`、`stage-status`、`check`、`evidence-summary` 只读；`check` 未满足完成门时退出 1。检查结果仅说明记录约束，不证明真实阶段执行、引擎或人工验收通过。
 
 ## 实施与证据
 
-- `planned → implementing → validating → complete`；缺依赖时记录 `blocked`，解除后继续原工作项。工具不自动迁移状态，不执行引擎命令。
+- `planned → implementing → validating → complete`；缺依赖时记录 `blocked`，解除后继续原工作项。阶段工具只改变当前阶段的活动/完成记录及相邻 stage，不自动完成整个工作项，也不执行引擎命令。
 - F0 核对用户目标与范围，F1 核对实际交付满足目标，F2 核对 Roblox 领域质量，F3 核对真实验证，F4 核对适用的高影响操作授权。F1/F2 的质量判断由代理或人工完成，不能从 JSON 结构检查推断。
 - 实施后先推荐 T0–T3，简述理由、覆盖和命令，再自动运行已授权的普通验证；不把失败改成 PASS。
 - 每项证据绑定 workItemId、候选、实际时间、类别、执行上下文、结果、非空产物路径与结论；Studio 证据同时绑定 studioId、Place/Universe 与实际 DataModel。逐条 verification、acceptanceResults 和适用 domainReview 关联当前证据；变更影响行为时更新候选并重验，不计算 SHA，也不为无影响的文案调整重开阶段。
@@ -44,7 +48,9 @@ node scripts/workflow-control.mjs check-project --repo D:\Games\my-game
 
 ## 人工与外部边界
 
-V0–V4 每阶段通过 stageReviews 保留可查看产物，并用 visualContractRef 记录布局目标；视觉质量五维和动态情景按真实交付验收。需要产品选择或视觉确认时，先展示具体交付再提问；复用当前目标内已有确认，不反复请求对技术方案的文字确认。项目明确约定逐阶段人工门时设 stagePolicy=manual，按该约定执行。
+`deliverables` 要求每阶段实际完成、展示交付与退出核对，无必要人工决定时可以连续推进；`manual` 还要求每阶段的真实用户确认。“不必每步询问”不能解释为跳过阶段。阶段汇报明确当前阶段、实际交付、完成依据、剩余问题和下一步。必要产品选择、授权或人工视觉门只阻断依赖该结果的工作。
+
+视觉情景的 `technical` 与 `visual` 分别记录。探针、布局、日志或 Play 只产生技术结论；没有当前候选的用户判断时，视觉五维与情景的人工结论保持 NOT_RUN。全局方向批准只可作为具体对象的复用来源，不能代替场景/界面的人工显示验收。保留已有效确认及失败、修复、复验来源；不倒填时间或确认，不把历史 FAIL 改为 PASS。
 
 截图可采集并交给用户检查；默认不自动分析截图或判定显示通过。可见交付完成必须有当前候选的用户确认来源；用户明确授权自动视觉检查时，仍按其验收要求报告结果，不把自动检查记录成用户确认。
 

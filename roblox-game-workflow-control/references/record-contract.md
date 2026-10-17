@@ -50,13 +50,19 @@ visual 证据保存用户实际查看的图片/视频位置、检查要点和真
 
 SCENE/DISPLAY_LAYER 的 visual 证据也必须绑定当前 studioId、placeId、universeId，不能用另一 Place 的图片借用当前确认。图像自身可以来自已核实的人工采集路径，因此不强制 visual 填技术 DataModel；最终运行情景另由真实 Play 证据覆盖。
 
-visualReview.qualityResults 包含 themeFit、audienceFit、gameplayReadability、viewingComfort、artCompletion 五项，每项为 `{status,reason}`。完成时均须有真实人工 PASS 结论；技术参数和探针不能自动填入这些结论。scenarios 列出 normal-play、repeated-feedback、event-peak、overlap-peak，每项含 id、required、result、evidenceIds、reason。必需情景须 PASS 且绑定实际 Play 证据；不适用情景须 NOT_APPLICABLE 并说明理由；normal-play 始终必需。
+visualReview.qualityResults 包含 themeFit、audienceFit、gameplayReadability、viewingComfort、artCompletion 五项，每项为 `{status,reason,userMessageRef}`。初始为 NOT_RUN；人工 PASS/FAIL 均须保留当前候选的真实用户判断，技术参数不能填入这些结论。无关文案修改不更换候选，也不撤销已有有效判断。
+
+scenarios 列出 normal-play、repeated-feedback、event-peak、overlap-peak，每项含 id、required、reason，以及分开的 `technical: {result,evidenceIds}` 和 `visual: {result,evidenceIds,userMessageRef,reason}`。技术 PASS 引用同情景当前批准用例的 Play；人工 PASS 另需当前候选 visual 证据及真实用户回复。没有用户判断时 visual 保持 NOT_RUN。初始非 normal 情景的 required=null，确认适用性后改为 true/false；不适用时两类结果均为 NOT_APPLICABLE、证据为空并说明理由。normal-play 始终必需。旧的 scenario.result/evidenceIds 混合字段被拒绝。
 
 ## 可见合同与阶段交付
 
 visualContractRef 指向项目内 JSON，包含 version=1、workItemId、orientations、inputs、locales、viewports、safeAreaPolicy、nodes。每个视口记录唯一 id、正数 width/height 与目标 orientation；每个节点有 id、game.路径 path、parentId（根为 null）、role 和 layoutRef。layoutRef 说明真实布局参照，父子关系不能缺失或成环。细节见[响应式合同](../../roblox-development-workflow/references/responsive-ui-contract.md)。
 
-stageReviews 为 V0–V4 各阶段保留 `{stage,workItemId,path}`，指向可查看的非空交付物；V4 另需当前 candidate。同一个持续维护的规格文件可以由多个阶段引用，不强制生成重复文档。stagePolicy=deliverables 时不为普通技术步骤追加人工提问；项目要求逐阶段确认时设为 manual，每阶段记录真实 userMessageRef。V4 人工视觉确认始终由 visualReview 绑定。早期有效交付和确认不因范围内实现调整自动失效，不计算 SHA。
+stageReviews 是从 V0 开始的连续前缀，当前 stage 对应最后一项；前置必须 complete，只有当前阶段可 active。每项包含稳定 id、stage、workItemId、candidate、status、真实 startedAt/completedAt、path/section、固定阶段 deliverables、逐条 exitChecks、presentedRef、remainingIssues、nextAction、reuse、evidenceIds 和 userMessageRef。准确字段与退出要求见[阶段契约](stage-contract.md)。V3/4 绑定当前候选，V0–V2 的有效交付不因无关文案变化失效；V3 另核对当前正式 Edit 回读。
+
+同一文档可被多个阶段引用，但 section 必须定位各自唯一 Markdown 标题及非空正文，不能复用同一章节冒充多个阶段。每阶段先完成交付并展示，核对逐项退出条件，才用 complete-stage 完成、advance-stage 单步进入下一阶段；禁止准备脚本直接设置 V2/V3，禁止用批量记录或运行汇总代替真实推进。stage-template 仅生成当前阶段的待填交付，不自动填写完成或人工判断。
+
+stagePolicy=deliverables 不额外要求每阶段人工批准，但仍须顺序交付和展示；manual 还须每阶段真实 userMessageRef。必要决定只阻断依赖它的工作。复用须说明 sourceRef、scope、remaining，不能将全局方向批准当作具体对象验收。时间和消息引用不能倒填；本地检查只验证记录关系，不能认证它们的真实性。
 
 ## 拷问与产品决策
 
@@ -72,4 +78,4 @@ operations 每项含 kind（upload / publish / payment / external-write / device
 
 ## 更新方法
 
-正常文件工具编辑 JSON 后运行 status/check。本工具不提供自动批准、自动完成、自动调用引擎的 run 指令。首次 init 生成版本 2、空目标和未完成实施包，必须由实际发现补齐；不能仅为了检查通过填入虚假信息。只有 validating/complete 状态能满足完成记录检查；状态本身仍不代替证据。
+其他工作项字段可用正常文件工具编辑，再运行 status/check。阶段使用 stage-template、complete-stage、advance-stage 维护现有 stage/stageReviews；stage-status 查看当前退出与可推进情况，evidence-summary 只读分列技术证据和人工声明。工具不自动批准、不完成整个工作项、不调用引擎。首次 init 生成版本 2、空目标、未完成实施包及 active V0，必须按实际发现补齐。只有 validating/complete 状态能满足最终完成门；检查 ready 只表示记录约束满足，不能表述为真实过程、引擎或人工验收通过。

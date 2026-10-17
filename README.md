@@ -65,7 +65,11 @@ node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs ch
 
 新工作项尚未配置完整，`check` 返回缺失信息是正常行为。字段和证据见 [记录契约](roblox-game-workflow-control/references/record-contract.md)。本地检查不执行 Studio 命令，不自动批准或标记完成。
 
+新场景/显示层始终以 active V0 开始，按[阶段契约](roblox-game-workflow-control/references/stage-contract.md)逐步交付：`stage-status` 查看当前阶段，`stage-template --output <项目内JSON>` 导出待填交付，完成并展示实际内容后用 `complete-stage --delivery <项目内JSON>` 核对退出条件，再用 `advance-stage` 进入下一阶段。deliverables 允许连续推进，manual 另需真实逐阶段确认；两者都不能批量补齐阶段或直接设为 V4。
+
 当前工作项版本为 2：每条验收目标和计划检查都绑定当前证据，Studio 证据同时核对工作项、候选、Studio、Place、Universe 与采集时间。未发布工程回读得到的 Place/Universe 可以是 0，未知值保持 null。可见交付保留 V0–V4 产物、视觉目标合同、五项人工美术结论和适用动态情景；复杂交付另需独立领域审查。仅填写 PASS 或放入无关日志不能满足记录检查。
+
+情景的 technical 与 visual 分别记录技术覆盖和人工显示判断；缺当前候选的用户判断时，人工质量与情景保持 NOT_RUN。`evidence-summary` 只读汇总，既不补早期阶段，也不从 Play 成功生成视觉 PASS。结构检查不认证真实流程、引擎或人工验收。
 
 初始项目文档保持 unconfigured，不预设游戏内容或线上身份；已有核心文档时用 add-docs 增加所需可选交付，不覆盖设计文件。具体参数见[项目文档](roblox-development-workflow/references/project-artifacts.md)。
 

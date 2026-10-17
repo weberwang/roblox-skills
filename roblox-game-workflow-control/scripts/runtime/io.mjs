@@ -1,4 +1,5 @@
-import { closeSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
+import { closeSync, fsyncSync, lstatSync, mkdirSync, openSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 
 /** 检查整条现存路径，拒绝符号链接与 Windows 目录联接。 */
@@ -63,4 +64,36 @@ export function writeNewJson(repo, localPath, value) {
 /** 读取项目内 JSON，保持所有写入和证据读取使用相同路径边界。 */
 export function readJson(repo, localPath) {
   return JSON.parse(readFileSync(projectPath(repo, localPath), "utf8"));
+}
+
+/** 单写者以原文比对和同目录原子替换保存推进结果，失败不留下半份工作项。 */
+export function replaceJson(repo, localPath, expectedText, value) {
+  if (typeof expectedText !== "string") throw new Error("替换记录必须提供读取时的原文");
+  const serialized = JSON.stringify(value, null, 2);
+  if (serialized === undefined) throw new Error("JSON 记录不能是 undefined");
+  const target = projectPath(repo, localPath);
+  const temporary = projectPath(repo, `${localPath}.${randomUUID()}.tmp`);
+  const lock = projectPath(repo, `${localPath}.lock`);
+  let lockDescriptor;
+  let descriptor;
+  let created = false;
+  try {
+    lockDescriptor = openSync(lock, "wx");
+    if (readFileSync(target, "utf8") !== expectedText) throw new Error("工作项已变化，请重新读取后再推进");
+    descriptor = openSync(temporary, "wx");
+    created = true;
+    writeFileSync(descriptor, `${serialized}\n`, "utf8");
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+    descriptor = undefined;
+    // 在替换前再次核对外部编辑，保留并发写者已经保存的内容。
+    if (readFileSync(projectPath(repo, localPath), "utf8") !== expectedText) throw new Error("工作项已变化，拒绝覆盖外部编辑");
+    renameSync(temporary, target);
+    created = false;
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    if (created) unlinkSync(temporary);
+    if (lockDescriptor !== undefined) { closeSync(lockDescriptor); unlinkSync(lock); }
+  }
+  return target;
 }

@@ -1,6 +1,16 @@
 # Roblox 视觉工作流
 
-本流程把视觉定义、资产接入和运行体验纳入现有 Work Item 与 V0–V4 `stageReviews` 交付记录。它不另造视觉状态机，也不要求每一步都新增人工确认；沿用项目的 `manual` 策略，只有真实的方向取舍、授权决定或明确的视觉验收门需要等待用户。先读取[Studio 插件路由](studio-plugin-routing.md)、[响应式 UI 合同](responsive-ui-contract.md)和[共享资源登记与使用](shared-asset-usage.md)。
+本流程把视觉定义、资产接入和运行体验纳入现有 Work Item 与 V0–V4 `stageReviews`。新可见工作项从 V0 开始，按[阶段契约](../../roblox-game-workflow-control/references/stage-contract.md)完成并展示当前交付、核对退出条件后再单步推进。`deliverables` 可以连续完成这些步骤；`manual` 还需逐阶段真实确认。两种策略都不能跳阶段，也不另造状态机。先读取[Studio 插件路由](studio-plugin-routing.md)、[响应式 UI 合同](responsive-ui-contract.md)和[共享资源登记与使用](shared-asset-usage.md)。
+
+| 阶段 | 必须实际完成的内容 |
+| --- | --- |
+| V0 | 对象身份、目标、范围、宿主、依赖、已有资源与未知项。 |
+| V1 | 玩家流程、状态、信息层级、布局目标、视觉参考与验收范围。 |
+| V2 | 实例结构、组件职责、数据接口、资源消费、所有权和验证计划。 |
+| V3 | 实际 Edit 组合、引用接线、正式源回读和可查看交付。 |
+| V4 | 运行接入、输入与生命周期、日志、动态技术覆盖及人工显示验收。 |
+
+V0–V3 不能由同一份运行报告批量补齐。多个阶段可以引用同一 Markdown 文档，但分别定位独立标题下的交付正文，并记录对应退出依据和展示来源。已有成果可复用，需注明来源、适用范围及当前仍需完成的内容；只批准全局 R1 等视觉方向不表示本场景、弹窗或界面已验收。每次汇报说明当前阶段、实际交付、完成依据、剩余问题和下一步。
 
 ## 视觉基线与需求
 
@@ -36,9 +46,9 @@ Studio 插件能查树、读写脚本/实例、采集 Edit 截图、执行单客
 
 技术检查只验证结构、实例属性、资源引用、脚本行为、输入轨迹、日志和合同字段。截图交给用户人工查看；只有用户对实际画面的明确判断可以填写视觉质量结论。机器不得分析截图、猜测用户接受度，或因技术检查通过自动填入视觉 `PASS`。
 
-`visualReview.qualityResults` 必须逐项记录 `themeFit`、`audienceFit`、`gameplayReadability`、`viewingComfort`、`artCompletion`；每项含 `status: PASS | FAIL | NOT_RUN` 和说明结论依据的 `reason`。尚无用户视觉判断时保持 `NOT_RUN`；工程或布局参数通过不能替代这些字段的人工结论。
+`visualReview.qualityResults` 必须逐项记录 `themeFit`、`audienceFit`、`gameplayReadability`、`viewingComfort`、`artCompletion`；每项含 `status: PASS | FAIL | NOT_RUN`、`reason` 和 `userMessageRef`。尚无当前候选的用户视觉判断时保持 `NOT_RUN`、引用为空；人工 PASS/FAIL 必须指向真实判断。工程或布局参数通过不能替代这些字段。
 
-`visualReview.scenarios` 必须记录四种体验情境，每项含 `id`、`required`、`result`、`evidenceIds`、`reason`：
+`visualReview.scenarios` 必须记录四种体验情境，每项含 `id`、`required`、`reason`，并分别保存 `technical: {result,evidenceIds}` 与 `visual: {result,evidenceIds,userMessageRef,reason}`：
 
 | `id` | 何时必需 | 需观察的玩家体验 |
 | --- | --- | --- |
@@ -47,6 +57,8 @@ Studio 插件能查树、读写脚本/实例、采集 Edit 截图、执行单客
 | `event-peak` | 单次高强度关键事件适用时 | 关键事件是否遮住必要信息，以及结束后的恢复。 |
 | `overlap-peak` | 多类事件可同时发生时 | 叠加时的优先级、遮挡和辨认结果。 |
 
-`result` 可为 `PASS`、`FAIL`、`NOT_RUN` 或 `NOT_APPLICABLE`。`normal-play` 总是 `required: true`；其他情境只有在当前玩法确实不适用时才设 `required: false` / `NOT_APPLICABLE` 并说明理由。每个 required 情境都须绑定属于当前 Work Item、当前候选、当前目标视口和真实 Play 的 `evidenceIds`；没有相应运行证据或尚未人工判断时分别保持 `NOT_RUN`，不以 Edit 截图代填。技术侧仅检查字段完整性、状态一致性及证据身份，不填写人工视觉判断。
+两类 `result` 各自取 `PASS`、`FAIL`、`NOT_RUN` 或 `NOT_APPLICABLE`。`normal-play` 始终必需；其他情境待判断时 `required: null`，确认不适用后才设 false，并将两类结果均设 NOT_APPLICABLE、说明理由。适用情境的技术 PASS 绑定同情景、当前用例的 Play；人工 PASS 另绑定当前候选的 visual 证据和真实用户消息。两种视口运行成功只能更新 technical，不能自动填 visual。旧的顶层 `scenario.result/evidenceIds` 不再使用。没有人工判断时 visual 保持 NOT_RUN，不能用 Edit 截图、探针或 Play 日志替代。
 
 返修只重验受变更影响的维度和情境；视觉目标或运行行为变化时更新相应证据，失败时交回对应所有者修复。工具不支持目标视角的运行取证时，记录缺口并等待用户提供实际画面证据或保持未运行，不伪造证据。
+
+历史失败、修复与复验保留原始记录及来源；不得将旧 FAIL 原地改成 PASS。发现批量阶段登记时，先保留原记录与已有代码/报告/截图，核实各阶段的实际交付，再恢复最早缺失阶段；无法确认的阶段写明尚需核实，不编造过去的时间或用户确认。与本次缺陷无关的已有效确认继续有效。

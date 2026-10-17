@@ -50,7 +50,7 @@ const PROFILE_TEMPLATE = Object.freeze({
 const MARKDOWN_TEMPLATES = Object.freeze({
   "GDD.md": `# 游戏设计文档\n\n状态：unconfigured\n\n## 体验概述\n\n待填写实际体验目标。\n\n## 核心循环\n\n待填写玩家可观察的核心循环。\n\n## 玩家目标与成长\n\n待填写目标、进度与奖励。\n\n## 范围与非目标\n\n待填写本阶段包含和排除的内容。\n\n## 验收标准\n\n待填写可观察的验收条件。\n`,
   "TDD.md": `# 技术设计文档\n\n状态：unconfigured\n\n## 源数据与工程入口\n\n待记录 Studio DataModel、文件工程或同步映射的实际来源。\n\n## 模块边界与所有权\n\n待记录模块职责、唯一负责人和依赖。详见 module-manifest.json。\n\n## 客户端与服务器职责\n\n待记录实际权威边界和客户端表现职责。\n\n## Remote 与数据契约\n\n待记录 Remote 名称、参数验证、速率限制与数据所有权。\n\n## 生命周期与持久化\n\n待记录玩家加入、离开、保存和失败处理。\n`,
-  "qa-plan.md": `# QA 计划\n\n状态：unconfigured\n\n## 测试范围\n\n待填写本次测试目标和明确排除项。\n\n## Studio 检查\n\n待填写计划检查；计划内容不代表已执行。\n\n## 设备与输入覆盖\n\n待填写已确认的目标设备和输入方式。\n\n## 人工视觉验收\n\n待填写已确认的视觉检查范围、证据路径和用户确认来源。\n`,
+  "qa-plan.md": `# QA 计划\n\n状态：unconfigured\n\n## 测试范围\n\n待填写本次测试目标、工作项及当前阶段、明确排除项；核对前置阶段的独立交付和退出依据。\n\n## Studio 检查\n\n待填写计划检查；计划内容不代表已执行，运行报告不能补齐早期阶段。\n\n## 设备与输入覆盖\n\n待填写已确认的目标设备、输入方式和用例；技术结果记录在情景 technical 中。\n\n## 人工视觉验收\n\n待填写当前候选的视觉检查范围、visual 证据和真实用户判断来源；未取得判断时保持视觉 NOT_RUN，不从技术 PASS 自动填入。\n`,
   "release-checklist.md": `# 发布检查清单\n\n状态：unconfigured\n\n## 目标身份\n\n待填写已确认的体验、Universe 和 Place。\n\n## 保存与发布授权\n\n待记录单独授权；缺少授权时不得执行上传或发布。\n\n## 发布前检查\n\n待填写真实完成的检查及对应证据。\n\n## 回滚与后续观察\n\n待填写可执行的恢复步骤和观察负责人。\n`,
 });
 

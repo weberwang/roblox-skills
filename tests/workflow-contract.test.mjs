@@ -86,7 +86,7 @@ test("人工美术结论与动态情景不能被静态证据替代", () => inPro
   item.visualReview.qualityResults.themeFit.status = "NOT_RUN";
   assert.equal(assess(item, root).ready, false);
   item.visualReview.qualityResults.themeFit.status = "PASS";
-  item.visualReview.scenarios[0].evidenceIds = ["readback"];
+  item.visualReview.scenarios[0].technical.evidenceIds = ["readback"];
   assert.equal(assess(item, root).ready, false);
 }));
 

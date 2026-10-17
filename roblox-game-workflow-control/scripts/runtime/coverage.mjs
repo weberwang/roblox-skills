@@ -87,7 +87,7 @@ export function checkCoverage(item, contract, usable, context, scenarios) {
 
   for (const [scenarioId, scenario] of scenarios) {
     if (scenario?.required !== true) continue;
-    for (const evidenceId of Array.isArray(scenario.evidenceIds) ? scenario.evidenceIds : []) {
+    for (const evidenceId of Array.isArray(scenario.technical?.evidenceIds) ? scenario.technical.evidenceIds : []) {
       const testCase = evidenceCases.get(evidenceId);
       if (!testCase || testCase.scenario !== scenarioId) {
         require(false, `情景 ${scenarioId} 引用的 Play 未通过同情景 coverage：${evidenceId}`);

@@ -18,6 +18,15 @@ test("安装全部技能、引用和控制运行时，可从安装后的目录�
   const projectCheck = spawnSync(process.execPath, [cli, "check-project", "--repo", root], { encoding: "utf8" });
   assert.equal(projectCheck.status, 1, projectCheck.stderr);
   assert.equal(JSON.parse(projectCheck.stdout).ready, false);
+  const sceneInit = spawnSync(process.execPath, [cli, "init", "--repo", root, "--id", "installed-scene", "--type", "SCENE", "--objective", "已安装阶段工具冒烟"], { encoding: "utf8" });
+  assert.equal(sceneInit.status, 0, sceneInit.stderr);
+  const stageStatus = spawnSync(process.execPath, [cli, "stage-status", "--repo", root, "--id", "installed-scene"], { encoding: "utf8" });
+  assert.equal(stageStatus.status, 0, stageStatus.stderr);
+  assert.equal(JSON.parse(stageStatus.stdout).currentStage, "V0");
+  assert.equal(JSON.parse(stageStatus.stdout).canAdvance, false);
+  const sceneRecord = JSON.parse(readFileSync(join(root, ".workflow-control/work-items/installed-scene.json"), "utf8"));
+  assert.equal(sceneRecord.stageReviews[0].status, "active");
+  assert.ok(sceneRecord.visualReview.scenarios.every((scenario) => scenario.visual.result === "NOT_RUN"));
 }));
 
 test("先检查全部冲突，拒绝覆盖时不发生部分安装", () => inProject((root) => {

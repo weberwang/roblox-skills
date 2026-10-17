@@ -9,6 +9,8 @@ description: 设计与实现 Roblox 游戏内 HUD、菜单、对话框、输入�
 
 所有可见 UI 工作项均按[响应式 UI 合同](../roblox-development-workflow/references/responsive-ui-contract.md)维护 `visualContractRef`；需要视觉基线和人工画面验收时同时遵守[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)。合同记录实际安全区、视口、语言、输入和语义节点关系，不能以截图或一处尺寸推断全平台适配。
 
+新界面从 V0 开始，按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)完成 V1 定义和 V2 拆解后才进入正式 Edit 组合；每阶段交付、展示及退出核对完成后单步推进。复用全局美术方向须说明本界面的适用范围和剩余工作，不代表本界面已验收。运行技术结果和人工显示结论分别记录，缺用户判断保持人工 NOT_RUN。
+
 ## 职责与输入
 
 - 先检查 StarterGui、ScreenGui、已有 UI 模块、输入动作、文本本地化和设计规格；复用现有组件。

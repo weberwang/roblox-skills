@@ -95,6 +95,8 @@ node scripts/workflow-files.mjs check-docs --repo D:\Games\my-game --include vis
 
 状态只能为 `unconfigured` 或 `ready`。`artBrief` 持久化主题、目标受众、核心循环、观看情境、可读性目标和舒适度约束；初始值为空，不得替用户编造。ready 基线要求这六项均有实际内容，并通过 `userMessageRef` 引用用户真实提供或确认简报的消息；工具不得生成用户确认。`targets` 可记录已确认的规范，例如色彩、字体或语言数量，不预设固定限制。ready 还要求目标列表非空且唯一，`evidenceRefs` 指向项目内已存在的非空证据文件。结构检查不会自动读取、分析或验收截图；视觉效果由用户人工检查。
 
+视觉基线确认仅覆盖全局方向。具体场景/界面复用时须在阶段交付中注明来源、适用范围与剩余工作，不能据此认定其 V1、V3 或人工显示验收已完成。
+
 ### `asset-register.json`
 
 ```json

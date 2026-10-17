@@ -20,6 +20,11 @@ function configureCoverage(root, item, cases, options = {}) {
   writeFileSync(contractPath, JSON.stringify(contract));
 
   const firstPlay = item.evidence.find((entry) => entry.type === "play");
+  const visualEvidence = item.evidence.find((entry) => entry.type === "visual");
+  const userMessageRef = "test-fixture-only";
+  item.visualReview.evidenceId = visualEvidence.id;
+  item.visualReview.userMessageRef = userMessageRef;
+  for (const result of Object.values(item.visualReview.qualityResults)) result.userMessageRef = userMessageRef;
   const evidenceIds = new Map();
   for (const [index, testCase] of cases.entries()) {
     const evidenceId = index === 0 ? firstPlay.id : `play-${testCase.id}`;
@@ -43,10 +48,21 @@ function configureCoverage(root, item, cases, options = {}) {
   item.visualReview.scenarios = ["normal-play", "repeated-feedback", "event-peak", "overlap-peak"].map((id) => {
     const matchingCase = cases.find((testCase) => testCase.scenario === id);
     const applies = required.has(id);
+    const evidenceId = matchingCase ? evidenceIds.get(matchingCase.id) : undefined;
     return {
-      id, required: applies, result: applies ? "PASS" : "NOT_APPLICABLE",
-      evidenceIds: applies && matchingCase ? [evidenceIds.get(matchingCase.id)] : [],
+      id,
+      required: applies,
       reason: "仅用于验证覆盖合同的本地夹具",
+      technical: {
+        result: applies && matchingCase ? "PASS" : applies ? "NOT_RUN" : "NOT_APPLICABLE",
+        evidenceIds: applies && evidenceId ? [evidenceId] : [],
+      },
+      visual: {
+        result: applies ? "PASS" : "NOT_APPLICABLE",
+        evidenceIds: applies ? [visualEvidence.id] : [],
+        userMessageRef: applies ? userMessageRef : "",
+        reason: applies ? "仅用于验证人工结论契约的本地夹具" : "仅测试夹具声明不适用",
+      },
     };
   });
   return { contractPath, contract, evidenceIds };
@@ -123,7 +139,7 @@ test("缺少用例、泛用 Play 或显式未知用例不能通过", () => inPro
   ], { requiredScenarios: ["normal-play", "repeated-feedback"] });
   genericItem.evidence = genericItem.evidence.filter((entry) => entry.id === "play" || entry.type !== "play");
   delete genericItem.evidence.find((entry) => entry.type === "play").coverage;
-  genericItem.visualReview.scenarios.find((scenario) => scenario.id === "repeated-feedback").evidenceIds = ["play"];
+  genericItem.visualReview.scenarios.find((scenario) => scenario.id === "repeated-feedback").technical.evidenceIds = ["play"];
   assert.equal(assess(genericItem, root).ready, false);
 
   const unknown = singleCase(root);
@@ -159,7 +175,7 @@ test("Server 证据不能证明 Client 视口，单份 Play 不能复用于多�
     { id: "desktop-normal", viewportId: "desktop", input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" },
     { id: "desktop-feedback", viewportId: "desktop", input: "keyboard-mouse", locale: "zh-CN", scenario: "repeated-feedback" },
   ], { requiredScenarios: ["normal-play", "repeated-feedback"] });
-  item.visualReview.scenarios.find((scenario) => scenario.id === "repeated-feedback").evidenceIds = ["play"];
+  item.visualReview.scenarios.find((scenario) => scenario.id === "repeated-feedback").technical.evidenceIds = ["play"];
   assert.equal(assess(item, root).ready, false);
 }));
 
