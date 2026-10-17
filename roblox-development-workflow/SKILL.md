@@ -36,6 +36,8 @@ description: 使用 Roblox Studio 插件编排完整游戏开发或跨模块功�
 
 ## 可见对象与协作
 
+项目架构按[服务端、客户端与共享职责约定](references/foundation-integration.md#项目架构与-datamodel-职责)组织，并将其落实到[架构的阶段交付](references/foundation-integration.md#架构在-v0v4-中的交付)。编排负责在 V0 发现真实工程、V1 明确玩家状态与流程、V2 交付实例/模块/接口/所有权与验证计划，随后才进入 V3 组合和 V4 验证；由架构技能维护对应 TDD 与已有模块清单。沿用现有结构，只为真实需求提取共享能力。
+
 场景与显示层分别按 V0 分流、V1 定义、V2 拆解、V3 资源组合、V4 运行接入交付。按[视觉工作流](references/visual-workflow.md)、[响应式 UI](references/responsive-ui-contract.md)、[共享资源](references/shared-asset-usage.md)、[动画意图](references/animation-intent-contract.md)按需展开。先复用节点、组件与资源，复杂 UI 保持语义分组，不用单张概念图替代按钮和文本。
 
 新可见工作项从 V0 开始，执行[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)：当前阶段实际交付、展示并核对退出条件后，才可推进下一阶段。V2 未退出前不开始正式 Edit 组合，V3 未退出前不把运行汇总当成 V4 完成。准备/证据汇总脚本不得提前设置 V2/V3/V4、批量补阶段或从运行成功推断早期交付。`deliverables` 可顺序连续推进，`manual` 逐阶段核对真实确认，二者均不能跳阶段。
