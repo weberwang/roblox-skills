@@ -62,6 +62,8 @@ stageReviews 是从 V0 开始的连续前缀，当前 stage 对应最后一项�
 
 V2 另含 `decompositionRef`，定位项目内的[视觉拆解合同](../../roblox-development-workflow/references/visual-decomposition.md)。该合同与实际标注图片同编号，绑定本工作项已完成 V1 的冻结效果图，覆盖组件、来源、消费、装配、生产边界和状态；用户侧必须直接展示中文框选引线图片。完整摘要或 Markdown 引用不代替该合同与图片。检查仅验证文件和引用结构，不自动填写人工视觉结论或增加默认逐阶段审批。
 
+V2 合同的 `restoration` 记录逐项还原要求、目标机位和组合样板计划；V3 阶段另有 `production:{sampleAttempts:[],expansions:[]}`，字段、样板 visual 证据绑定和人工/明确授权自动检查的区别统一见[阶段契约的样板门](stage-contract.md#v3-内部样板生产门)。它不改变最终 `visualReview`，不建立第二份资产表或阶段状态机。资源技术 ready 与消费者样板及全场视觉验收分别取证。
+
 同一文档可被多个阶段引用，但 section 必须定位各自唯一 Markdown 标题及非空正文，不能复用同一章节冒充多个阶段。每阶段先完成交付并展示，核对逐项退出条件，才用 complete-stage 完成、advance-stage 单步进入下一阶段；禁止准备脚本直接设置 V2/V3，禁止用批量记录或运行汇总代替真实推进。stage-template 仅生成当前阶段的待填交付，不自动填写完成或人工判断。
 
 stagePolicy=deliverables 不额外要求每阶段人工批准，但仍须顺序交付和展示；manual 还须每阶段真实 userMessageRef。必要决定只阻断依赖它的工作。复用须说明 sourceRef、scope、remaining，不能将全局方向批准当作具体对象验收。时间和消息引用不能倒填；本地检查只验证记录关系，不能认证它们的真实性。

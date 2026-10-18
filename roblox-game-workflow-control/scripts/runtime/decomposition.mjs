@@ -1,4 +1,5 @@
 import { readProjectImage } from "./image-file.mjs";
+import { validateRestoration } from "./restoration.mjs";
 
 const ROUTES = new Set(["IMAGE_ASSET", "ROBLOX_NATIVE", "REUSE", "MODEL_3D", "MATERIAL", "VFX"]);
 
@@ -100,6 +101,7 @@ export function validateDecomposition(repo, item, review, contract) {
     requireText(exclusion?.description, `coverage.exclusions[${index}].description`);
     requireText(exclusion?.reason, `coverage.exclusions[${index}].reason`);
   }
+  validateRestoration(contract);
   return true;
 }
 

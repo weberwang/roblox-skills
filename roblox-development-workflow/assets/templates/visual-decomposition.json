@@ -47,5 +47,31 @@
       ]
     }
   ],
-  "coverage": { "allSignificantElementsMapped": false, "exclusions": [] }
+  "coverage": { "allSignificantElementsMapped": false, "exclusions": [] },
+  "restoration": {
+    "views": [
+      {
+        "id": "",
+        "sourceImageId": "",
+        "purpose": "",
+        "camera": "",
+        "fov": "",
+        "viewport": "",
+        "anchors": ""
+      }
+    ],
+    "requirements": [
+      { "id": "", "aspect": "silhouette", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "proportion", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "placement", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "depth", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "palette", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "material", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "textureScale", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "lighting", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "surface", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" },
+      { "id": "", "aspect": "signature", "sourceImageId": "", "componentIds": [], "target": { "status": "", "value": "", "basis": "" }, "productionMethod": "", "consumer": "", "verification": "", "flexibility": "", "adjustmentReason": "" }
+    ],
+    "samplePlan": { "viewId": "", "componentIds": [], "requirementIds": [], "combination": "" }
+  }
 }

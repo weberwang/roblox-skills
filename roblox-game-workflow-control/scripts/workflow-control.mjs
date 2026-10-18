@@ -69,6 +69,7 @@ function evidenceSummary(item) {
     notice: "仅汇总记录；不认证阶段执行、引擎结果或人工验收",
     technical: (Array.isArray(item.evidence) ? item.evidence : []).filter((entry) => entry?.type !== "visual")
       .map((entry) => ({ id: entry?.id, type: entry?.type, candidate: entry?.candidate, result: entry?.result, path: entry?.path })),
+    sampleProduction: item.stageReviews?.find((review) => review.stage === "V3")?.production ?? null,
     visual: item.visualReview ?? null };
 }
 
@@ -113,6 +114,7 @@ function main() {
     if (!review || review.stage !== item.stage || review.status !== "active") throw new Error("当前阶段必须先有 active 记录");
     const fields = ["path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef"];
     if (review.stage === "V2") fields.push("decompositionRef");
+    if (review.stage === "V3") fields.push("production");
     const delivery = Object.fromEntries(fields.map((key) => [key, structuredClone(review[key])]));
     console.log(writeNewJson(options.repo, options.output, delivery));
     return;

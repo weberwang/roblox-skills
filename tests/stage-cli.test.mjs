@@ -107,6 +107,12 @@ test("CLI模板不改阶段，deliverables可逐阶段推进且拒绝直接指�
   assert.deepEqual(item.stageReviews.map((review) => review.status), ["complete", "complete", "complete", "active"]);
   assert.notEqual(JSON.stringify(item), original);
   assert.equal(run(root, "advance-stage").status, 1);
+  const templatePath = "docs/v3-template.json";
+  assert.equal(run(root, "stage-template", "--output", templatePath).status, 0);
+  const template = JSON.parse(readFileSync(join(root, templatePath), "utf8"));
+  assert.deepEqual(template.production, { sampleAttempts: [], expansions: [] }, "V3 模板不预填样板或接受");
+  const summary = JSON.parse(run(root, "evidence-summary").stdout);
+  assert.deepEqual(summary.sampleProduction, template.production);
 }));
 
 test("CLI manual缺确认时不保存完成，拒绝交付输入夹带stage或时间", () => inProject((root) => {

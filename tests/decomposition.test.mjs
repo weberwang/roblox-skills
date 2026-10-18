@@ -16,7 +16,10 @@ function v2Fixture(root, options = {}) {
   if (options.resetVisualReview) item.visualReview = createWorkItem("visual-test", "测试视觉隔离", "SCENE").visualReview;
   const review = item.stageReviews.at(-1);
   if (options.componentCount) {
-    review.decompositionRef = createDecompositionFixture(root, item, review, { componentCount: options.componentCount }).path;
+    review.decompositionRef = createDecompositionFixture(root, item, review, {
+      componentCount: options.componentCount,
+      states: options.states,
+    }).path;
   }
   return { item, review, contract: JSON.parse(readFileSync(join(root, review.decompositionRef), "utf8")) };
 }
@@ -37,6 +40,56 @@ test("有效 V2 标注合同允许按既有策略进入 V3，且不会改写人�
   assert.equal(JSON.stringify(item.visualReview), before);
   assert.ok(item.visualReview.scenarios.every((scenario) => scenario.visual.result === "NOT_RUN"));
   assert.equal(advanceStage(item, root).stage, "V3");
+}));
+
+test("V2 还原合同要求完整机位、十项维度、来源映射和组合样板计划", () => inProject((root) => {
+  const { item, review, contract } = v2Fixture(root, { componentCount: 2, states: ["idle", "hover"] });
+  assert.equal(contract.restoration.requirements[0].target.status, "unknown");
+  assert.equal(stageStatus(item, root).valid, true, "显式 unknown 是有效记录，且不声称已测量");
+
+  const missingStandard = structuredClone(contract);
+  delete missingStandard.restoration;
+  bindContract(root, review, missingStandard, "missing-restoration");
+  assert.match(stageStatus(item, root).errors.join(" "), /必须提供 restoration 还原标准对象/);
+
+  const missingViewField = structuredClone(contract);
+  missingViewField.restoration.views[0].fov = " ";
+  bindContract(root, review, missingViewField, "missing-view-field");
+  assert.match(stageStatus(item, root).errors.join(" "), /views\[0\]\.fov 必须是非空文本/);
+
+  const missingAspect = structuredClone(contract);
+  const omittedAspectIds = new Set(missingAspect.restoration.requirements.filter((entry) => entry.aspect === "silhouette").map((entry) => entry.id));
+  missingAspect.restoration.requirements = missingAspect.restoration.requirements.filter((entry) => !omittedAspectIds.has(entry.id));
+  missingAspect.restoration.samplePlan.requirementIds = missingAspect.restoration.samplePlan.requirementIds.filter((id) => !omittedAspectIds.has(id));
+  bindContract(root, review, missingAspect, "missing-aspect");
+  assert.match(stageStatus(item, root).errors.join(" "), /缺少视觉维度：silhouette/);
+
+  const unmappedSampleComponent = structuredClone(contract);
+  unmappedSampleComponent.restoration.samplePlan.componentIds = ["C1"];
+  bindContract(root, review, unmappedSampleComponent, "unmapped-sample-component");
+  assert.match(stageStatus(item, root).errors.join(" "), /样板组件未覆盖要求 .* 所需组件 C2/);
+
+  const missingSourceRequirement = structuredClone(contract);
+  const secondSourceId = missingSourceRequirement.sourceImages[1].id;
+  const secondSourceRequirementIds = new Set(missingSourceRequirement.restoration.requirements
+    .filter((entry) => entry.sourceImageId === secondSourceId).map((entry) => entry.id));
+  missingSourceRequirement.restoration.requirements = missingSourceRequirement.restoration.requirements
+    .filter((entry) => !secondSourceRequirementIds.has(entry.id));
+  missingSourceRequirement.restoration.samplePlan.requirementIds = missingSourceRequirement.restoration.samplePlan.requirementIds
+    .filter((id) => !secondSourceRequirementIds.has(id));
+  bindContract(root, review, missingSourceRequirement, "missing-source-requirement");
+  assert.match(stageStatus(item, root).errors.join(" "), /来源图片缺少还原要求/);
+}));
+
+test("测量目标必须保留依据记录，unknown 的数值槽必须使用文本", () => inProject((root) => {
+  const { item, review, contract } = v2Fixture(root);
+  contract.restoration.requirements[0].target = { status: "measured", value: "12 px", basis: " " };
+  bindContract(root, review, contract, "measured-without-basis");
+  assert.match(stageStatus(item, root).errors.join(" "), /target\.basis 必须是非空文本/);
+
+  contract.restoration.requirements[0].target = { status: "unknown", value: 12, basis: "尚未测量" };
+  bindContract(root, review, contract, "unknown-numeric-value");
+  assert.match(stageStatus(item, root).errors.join(" "), /target\.value 必须是非空文本/);
 }));
 
 test("源图与标注预览支持可解码的固定 JPEG 与 WebP 夹具", () => inProject((root) => {

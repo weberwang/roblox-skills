@@ -2,6 +2,7 @@ import { readFileSync, statSync } from "node:fs";
 import { extname } from "node:path";
 import { checkEvidence, STUDIO_EVIDENCE_TYPES } from "./evidence.mjs";
 import { validateDecomposition } from "./decomposition.mjs";
+import { checkSampleProduction, createSampleProduction } from "./sample-production.mjs";
 import { projectPath } from "./io.mjs";
 
 /** 可见工作项按固定顺序推进；每项交付物对应一个可核对的完成条件。 */
@@ -55,6 +56,7 @@ export function createStageReview(item, stage, now = new Date().toISOString()) {
     userMessageRef: "",
     exitCheckHistory: [],
     ...(stage === "V2" ? { decompositionRef: "" } : {}),
+    ...(stage === "V3" ? { production: createSampleProduction() } : {}),
   };
 }
 
@@ -161,6 +163,7 @@ export function checkStages(item, context, { requireComplete = false } = {}) {
       }
       checkInProgressShape(review, context);
     }
+    if (review.stage === "V3") checkSampleProduction(item, review, context);
   }
   const last = reviews.at(-1);
   report(context, STAGES.includes(item.stage) && item.stage === last?.stage, "item.stage 必须与最后一条阶段记录一致");
@@ -196,6 +199,7 @@ function checkInProgressShape(review, context) {
   } else {
     report(context, !Object.hasOwn(review, "decompositionRef"), `只有 V2 阶段可以记录 decompositionRef：${review.stage}`);
   }
+  report(context, review.stage === "V3" || !Object.hasOwn(review, "production"), `只有 V3 阶段可以记录 production：${review.stage}`);
   report(context, Array.isArray(review.remainingIssues), `阶段 remainingIssues 必须是数组：${review.stage}`);
   report(context, Array.isArray(review.reuse), `阶段 reuse 必须是数组：${review.stage}`);
   checkReuse(review, context);

@@ -5,17 +5,17 @@ description: 规划、查找、审查并接入 Roblox 的模型、材质、贴�
 
 # Roblox 视觉与资源
 
-确保视觉资源可追溯、可授权、可安全接入，并能被玩法与 UI 以稳定身份消费。开始前读取视觉目标、DataModel 路径、资源预算及[Studio 插件路由](../roblox-development-workflow/references/studio-plugin-routing.md)。
+确保视觉资源可追溯、可授权、可安全接入，并能被玩法与 UI 以稳定身份消费。开始前读取冻结的视觉来源/版本/用途、还原目标视图、DataModel 路径和资源预算及[Studio 插件路由](../roblox-development-workflow/references/studio-plugin-routing.md)。未知的机位、FOV、视口或尺寸保持未知，不能根据效果图外观编成实测值。
 
 先按[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)读取当前视觉基线，再按[共享资源登记与使用](../roblox-development-workflow/references/shared-asset-usage.md)查单一资源总表、消费者、许可和实际路径。模型生成、切分、材质配对、原位贴图替换及资源就绪边界均以该参考中的当前 Studio 工具事实为准。
 
 资源组合属于具体可见对象的 V3，开始正式 Edit 组合前核对其 V0–V2 退出与复用范围；生成资源成功或全局方向批准不能补齐对象阶段，也不证明消费界面已验收。按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)分别保留组合交付、正式源回读与当前仍需完成内容。
 
-V2 先按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)从冻结 V1 图枚举显著特征，确定图片、Roblox 原生、复用、模型、材质或特效路线，并在编号中文标注图中写明消费与生产边界。复用公共资产仍保留本地拆解编号及公共修订；原生项和原子资产内部特征也不能遗漏。拆解图片交给 image_generator 制作并直接展示；禁止裁切效果图充当正式资源，不能因程序能绘制就降级特色视觉。
+V2 先按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)从冻结 V1 图枚举显著特征，确定图片、Roblox 原生、复用、模型、材质或特效路线，并在编号中文标注图中写明消费与生产边界。同步填写同一拆解合同的 `restoration`：绑定目标机位/FOV/视口/构图锚点，逐项指定轮廓、比例、位置、空间层次、色板、材质、纹理尺度、光照、水面/岸沿等显著表现及其生产方法、消费者和验证方式。只有真实测量才标 measured；未知和不适用都注明原因。复用公共资产仍保留本地拆解编号及公共修订；原生项和原子资产内部特征也不能遗漏。拆解图片交给 image_generator 制作并直接展示；禁止裁切效果图充当正式资源，不能因程序能绘制就降级特色视觉。
 
-模型工作必读[3D 模型 V2 选型与 V3 生产接入](../roblox-development-workflow/references/model-production.md)：用现有阶段规格明确具体方法、参考/参数、部件、预算、消费者和恢复范围，再调用 Studio 生成工具。可调基础几何与复杂纹理网格分别评估程序化和网格路线；现有模型的材质/贴图加工不等于重新生成几何。按[内部交付模板](../roblox-development-workflow/assets/templates/model-production.md)记录真实任务结果、自动插入/新建同级/原位替换事实、脚本审查、正式源回读与资源绑定，不把 Completed 当接入成功。
+模型工作必读[3D 模型 V2 选型与 V3 生产接入](../roblox-development-workflow/references/model-production.md)：先按拆解逐组件路由到网格或可调程序化生成，具体判断依据见[按拆解结果路由生成模式](../roblox-development-workflow/references/model-production.md#按拆解结果路由生成模式)，并确认工具能否直接使用冻结参考图；文本路线只产生待审候选，须检查轮廓、比例和风格后才能进入样板。非等比缩放说明必要性，并复查造型与纹理尺度；现有模型的材质/贴图加工不等于重新生成几何。V3 必须在目标机位组合代表性局部样板，检查比例、轮廓、材质尺度、接缝、遮挡和层次；按项目既有策略接受当前样板后，才可批量生产或全场铺设。样板未接受时继续修样板，生成/上传授权不代表视觉接受。按[内部交付模板](../roblox-development-workflow/assets/templates/model-production.md)记录真实任务结果、自动插入/新建同级/原位替换事实、脚本审查、正式源回读与资源绑定，不把 Completed 当接入成功。
 
-3D 的默认执行链路使用 Roblox Studio 插件：查询/复用 → 生成模型 → 按需切分、材质与贴图加工 → 正式装配 → Edit 回读与资源登记。普通选型不增加人工批准；只有用户明确指定或已核实的 Roblox 能力缺口需要改变生产体系时，才处理相应替代决定。
+3D 的默认执行链路使用 Roblox Studio 插件：查询/复用 → 仅生产样板所需候选 → 审查候选 → 按目标机位组合样板并检查 → 在现有工作项记录中取得样板接受 → 扩展生产/全场装配 → Edit 回读与资源登记。样板状态留在现有 V3 `stageReviews.production` 中，不另设阶段或状态系统。普通方法选型不增加批准流程；样板接受遵循项目既有视觉检查策略，只有明确授权自动视觉检查时才用自动结论，并保留其与人工确认的区别。只有用户明确指定或已核实的 Roblox 能力缺口需要改变生产体系时，才处理相应替代决定。
 
 按[资源消费绑定](../roblox-game-workflow-control/references/asset-bindings.md)登记资源修订、当前/历史消费者及消费工作项的 Edit 回读；资源换版、退役或许可失效时，先处理实际受影响消费者，不以生产者 PASS 代替消费验收。
 
@@ -42,7 +42,7 @@ V2 先按[视觉拆解交付](../roblox-development-workflow/references/visual-d
 
 - 交付资源登记表、来源与许可证据、真实 assetId、消费者路径、导入或生成事实、性能预算和已知限制。
 - 通过 search_game_tree、inspect_instance、script_search、script_read 核验实际接入；工具未提供的状态标为未验证。
-- 若视觉效果需要截图确认，提供截图和人工检查要点，由用户确认显示效果；不得自动分析截图作为视觉验收。
+- 若视觉效果需要截图确认，按项目既有检查策略提供当前候选截图和检查要点；要求人工确认时由用户确认显示效果并留真实来源。只有用户明确授权自动视觉检查时，才在授权范围内自动检查并标记 automatic，不冒充人工确认；无此授权不得自动分析截图。
 - 动画和材质消费路径交接给 [玩法开发](../roblox-gameplay-development/SKILL.md) 与 [反馈动效](../roblox-game-juice/SKILL.md)，许可证据交给 [发布](../roblox-game-release/SKILL.md)。
 - 没有权属证明、资产夹带未经审查脚本或性能开销无预算时，标为阻断并给出安全替代路径。
 

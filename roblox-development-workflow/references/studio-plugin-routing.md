@@ -16,7 +16,7 @@
 | 创作者资源 | search_asset、insert_asset | 记录来源/许可，插入后审查脚本和引用 |
 | 网格/材质/贴图 | generate_mesh、generate_material、generate_texture | 生成结果回读；texture 原位替换；MaterialVariant 与 BaseMaterial 配套 |
 | 既有网格分件 | segment_mesh | MeshPart/Model 源，最多 5 个部件名；返回同级新 Model，不生成骨骼/关节 |
-| 可调程序化模型 | generate_procedural_model | 默认 async=true，会直接插入场景；参考图不擅自转述 |
+| 可调程序化模型 | generate_procedural_model | 可直接传入 attachedImageUri；默认 async=true 并直接插入 Workspace；prompt 仅沿用用户原话和用户要求的可调属性 |
 | 本地参考图片 | store_image | 转换为 IMAGEID，不等于上传发布 |
 | 上传图片 | upload_image | 外部写入；需当前资源/目标的明确授权 |
 | 后台任务 | wait_job_finished | 仅用户要求等待或后续操作依赖结果时调用，保留同一 studio_id/jobId |
@@ -42,7 +42,13 @@ StudioTestService.ExecuteMultiplayerTestAsync 需要 PluginSecurity；当前 exe
 
 search_asset 库存查询一次只接受一种资源类型，缺省为 Model；Package 单独查询。可见库存不等于跨所有者使用授权。generate_mesh 显式分件最多 8 项、三角形参数范围 12–20,000；这与 segment_mesh 的 5 项上限不同。generate_texture 的 Quality 预览仅支持单 MeshPart；写入前记录原位替换的影响和还原信息。
 
-模型选型与实际生产使用[3D 模型 V2/V3 流程](model-production.md)。当前 generate_mesh 只声明文本提示，没有参考图参数；generate_procedural_model 支持真实 attachedImageUri 并自动插入 Workspace。store_image 输入为本地 PNG/JPG/JPEG、最大 5 MB，返回 IMAGEID；不能将其与 generate_texture 的 hintImage 对象混用。后台任务的单写者与重试规则见[执行契约](studio-execution.md)。
+模型选型与实际生产使用[3D 模型 V2/V3 流程](model-production.md)，并按[拆解结果路由生成模式](model-production.md#按拆解结果路由生成模式)逐组件选择。以下仅记录实际工具输入边界：
+
+- `generate_mesh` 接受 `textPrompt`，不声明图像输入；`size` 与 `maxTriangles` 是生成目标参数，不是实际测量结果。
+- `generate_procedural_model` 的产物由基础体、脚本和可编辑 attributes 组成；调用输入支持 `attachedImageUri`。`async` 默认 `true`，工具会自动插入 Workspace。其 `prompt` 保留用户原话及用户要求的可调属性；只有图片、没有用户文字描述时传空字符串。V2 内部分析用于规格和路由，不能伪装成用户原话写进调用提示。
+- 规格计划和原始调用输入分别留档。工具分件名称只能来自用户明确要求的分件，不能将内部拆解单元冒充用户给出的 `segmentation`／`partNames`。
+
+`store_image` 输入为本地 PNG/JPG/JPEG、最大 5 MB，返回 IMAGEID；不能将其与 `generate_texture` 的 `hintImage` 对象混用。后台任务的单写者与重试规则见[执行契约](studio-execution.md)。
 
 ## 官方入口
 

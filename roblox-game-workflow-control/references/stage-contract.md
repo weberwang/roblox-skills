@@ -26,7 +26,7 @@
 
 架构内容按[架构阶段交付](../../roblox-development-workflow/references/foundation-integration.md#架构在-v0v4-中的交付)落入上述既有槽位：V2 的实例结构与职责说明服务端/客户端/共享归属，数据接口说明 Remote 方向及校验，资源消费和所有权列出实际消费者与状态所有者，验证计划覆盖依赖、启动、重生/退出及相关拒绝路径。TDD 和模块清单可作为分阶段交付的引用来源；未涉及的系统明确说明，不另加架构状态机或额外人工门。
 
-3D 模型按[模型阶段交付](../../roblox-development-workflow/references/model-production.md)落实到同一槽位：V2 明确具体生产方法与参数、参考、部件、预算和回读计划；V3 的组合/接线/正式回读/可查看交付分别记录真实生成终态、产物审查、装配、资源消费及 Edit 属性依据。可用[内部模板](../../roblox-development-workflow/assets/templates/model-production.md)定位独立 V2/V3 章节，不增字段或默认审批。当前阶段检查只要求有效通用 readback，不逐字段认证模型报告；整体工作项检查才核对已声明资源消费绑定。不能把阶段 canAdvance 表述为模型已经生成、接入或质量验收通过。
+3D 模型按[模型阶段交付](../../roblox-development-workflow/references/model-production.md)落实到同一槽位：V2 明确具体生产方法与参数、参考、部件、预算和回读计划；V3 的组合/接线/正式回读/可查看交付分别记录真实生成终态、产物审查、装配、资源消费及 Edit 属性依据。可用[内部模板](../../roblox-development-workflow/assets/templates/model-production.md)定位独立 V2/V3 章节。阶段检查核对通用 readback 与下述样板生产记录，不逐字段认证模型报告或画面；整体工作项检查另核对已声明资源消费绑定。不能把 canAdvance 表述为引擎或最终质量验收通过。
 
 每条阶段记录还包含稳定唯一 `id`、`workItemId`、`candidate`、`status`、`startedAt`、`completedAt`、`path`、`section`、`presentedRef`、`remainingIssues`、`nextAction`、`reuse`、`evidenceIds` 与 `userMessageRef`。开始时间必须是有效且不晚于当前的 ISO 时间；完成时间不早于开始时间，下一阶段开始时间不早于前一阶段完成时间。每个阶段必须有自己的实际开始时间，检查器不会代填时间。
 
@@ -41,6 +41,22 @@ V2 检查只证明合同与图片文件关系符合规则，不证明图片内�
 V0–V2 的有效记录不会因无关文案变更而要求候选号相同。V3 和 V4 必须绑定当前 candidate。V3 的 `evidenceIds` 至少包含一条当前候选 Edit readback；先核实目标的 Studio、Place、Universe 身份完整，再通过通用证据检查器校验工作项、Studio、Place、Universe、summary、ISO 采集时间、项目内非空文件及可选 `checkId`，并拒绝未来采集时间。空白、null 或 undefined 目标不能因与证据值相等而通过。正式源回读不由临时运行实例替代。
 
 ## 技术证据与人工结论
+
+### V3 内部样板生产门
+
+V2 `decompositionRef` 内的 `restoration` 是还原规格的唯一结构入口，字段见[视觉拆解合同](../../roblox-development-workflow/references/visual-decomposition.md)。V3 `production` 仅是本阶段的生产事实记录 `{sampleAttempts:[],expansions:[]}`，不另设阶段或状态。`stage-template` 输出空数组，不生成样板或接受结论。`editComposition` 和 `viewableDelivery` 的摘要与退出依据引用这些真实记录。
+
+先在 `restoration.samplePlan.viewId` 的机位做最小代表性组合，核对比例、轮廓、材质尺度、接缝、遮挡、空间层次与统一风格；孤立模型预览不能代替组合。未接受时 active V3 可继续修样板；批量生产、全场铺设及 V3 完成必须先通过当前样板门。已有生成/上传授权不失效，但也不构成显示接受；已有合格资源可复用。
+
+每轮 `sampleAttempts` 记录唯一 `id`、递增正整数 `revision`、实际 `candidate`、`viewId`、`componentIds`、`requirementIds`、真实 `createdAt`、`evidenceIds`、`checks`、`acceptance`。组件和要求覆盖 V2 最小组合且不得引用未知编号。`checks` 的唯一固定 id 为 `proportion/silhouette/materialScale/seams/occlusion/depth/style`，各含 `result=PASS|FAIL|NOT_RUN` 与具体 `basis`；PASS 是实际视觉检查声明，不从加载、数量或布局指标推导。视觉证据绑定通用目标身份，另有 `sample:{stageReviewId,sampleId,revision,viewId}`；截图不得早于本轮创建或复用旧轮次路径。证据 result=PASS 只表示采集记录可用，不等于样板已接受。
+
+`acceptance` 含 `scope:"sample"`、`sampleId/candidate/revision/viewId`、`result=NOT_RUN|PASS|FAIL`、`mode=manual|automatic`、`evidenceIds`、`userMessageRef`、`authorization`、`reviewedAt`。初始 NOT_RUN、证据为空、用户引用和时间为空；作出结论时引用本轮全部 visual 证据，时间不得早于截图。manual 必须引用真实且明确接受/拒绝当前样板的专属用户回复，`authorization=null`；“继续”“生成完了”、V1 方向批准或旧确认不能替代。automatic 必须有精确 `authorization:{userMessageRef,scope:"sample",sampleId,candidate,revision,viewId}`，`acceptance.userMessageRef` 留空；明确授权范围外仍交用户检查，自动结论不写成人工确认，也不自动满足 V4 最终人工门。PASS 前七项组合检查均须 PASS。
+
+已有自动视觉检查授权确实覆盖当前样板范围时，可沿用同一授权消息，每轮仍需单独绑定身份、采集新截图并给出新检查结论；授权来源的复用不等于复用旧检查结果，也不要求新增审批。检查器不能认证授权消息的实际语义，执行者必须核实适用范围。
+
+每条 `expansions` 记录 `kind=batch-production|full-scene-layout`、具体 `scope`、`sampleId/revision/candidate` 和真实 `startedAt`。开工时必须引用当时最新、已接受的样板，且不得早于其 `reviewedAt` 或晚于已登记的 V3 完成时间。后来的修复不能追认之前违规扩批。完成 V3 时最新样板须属于当前候选并已接受；资源 ready、生成成功、三角数、编译/加载 PASS 都不能绕过此门。完成接口拒绝删除或改写已有 PASS/FAIL 样板及扩展历史；待检查轮次可补充当前真实结论，修复则追加新轮次。
+
+修复应追加新轮次、新截图和新结论，保留旧候选与 FAIL；明显视觉差距先在 `remainingIssues` 和证据中记录影响范围，按源图/镜头构图、整体空间比例、组合材质光照、单体细节中最早失配层级修复，不以零散实例修补宣称整体接近完成。工作项最终 `visualReview` 继续负责全场与运行显示验收。检查器只查记录结构、身份、引用和时序，不能认证消息语义、截图内容或未登记的实际扩批行为。
 
 探针、布局参数、日志与交互断言作为技术证据记录在工作项的 `evidence` 中，并由阶段 `evidenceIds` 引用。人工视觉质量和动态情景结论留在 `visualReview`，须绑定当前候选的真实用户回复与 visual 证据。任何技术 PASS 都不能自动生成视觉 PASS；两个视口运行通过也不能自动判定人工视觉情景通过。
 

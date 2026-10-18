@@ -1,6 +1,7 @@
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { RESTORATION_ASPECTS } from "../roblox-game-workflow-control/scripts/runtime/restoration.mjs";
 
 const TEST_JPEG_BASE64 = "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAYACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDPooor7E+VCiiigAooooAKKKKAP//Z";
 const TEST_WEBP_BASE64 = "UklGRkgAAABXRUJQVlA4IDwAAABwAwCdASogABgAPm00lUekIyIhKAgAgA2JZQDIEoB+AABBlBAA/t4Sf/xu3GG/Bd/+FXxuQsiaAnYAAAA=";
@@ -184,7 +185,42 @@ export function createDecompositionFixture(root, item, review, { states = ["idle
       annotations: components.map((component) => ({ componentId: component.componentId, label: `测试标注 ${component.componentId}`,
         bounds: { x: 1, y: 1, width: 12, height: 10 } })) };
   });
-  const contract = { version: 1, workItemId: item.id, candidate: review.candidate, sourceImages, components, previews,
+  const views = sourceImages.map((source, index) => ({
+    id: `view-${index + 1}`,
+    sourceImageId: source.id,
+    purpose: `测试目标视图 ${source.state}`,
+    camera: "测试相机机位，未声明实测坐标",
+    fov: "未知，测试夹具未测量",
+    viewport: "未知，测试夹具未测量",
+    anchors: "测试锚点记录，未声明实测位置",
+  }));
+  const requirements = sourceImages.flatMap((source, sourceIndex) => RESTORATION_ASPECTS.map((aspect, aspectIndex) => ({
+    id: `R${sourceIndex + 1}-${aspectIndex + 1}`,
+    aspect,
+    sourceImageId: source.id,
+    componentIds: components.map((component) => component.componentId),
+    target: {
+      status: "unknown",
+      value: aspect === "surface" ? "水面/岸沿表现未知" : `测试夹具未声明 ${aspect} 的目标值`,
+      basis: "测试夹具未提供实际测量，只验证显式未知状态的合同结构",
+    },
+    productionMethod: `测试生产方法记录 ${aspect}`,
+    consumer: "测试消费者节点，不代表实际游戏绑定",
+    verification: "测试验证方法记录，不表示已通过视觉检查",
+    flexibility: "fixed",
+    adjustmentReason: "测试约束不允许玩法调整",
+  })));
+  const restoration = {
+    views,
+    requirements,
+    samplePlan: {
+      viewId: views[0].id,
+      componentIds: components.map((component) => component.componentId),
+      requirementIds: requirements.map((requirement) => requirement.id),
+      combination: "测试视图中的局部组合样板计划；未发生显示检查或接受",
+    },
+  };
+  const contract = { version: 1, workItemId: item.id, candidate: review.candidate, sourceImages, components, previews, restoration,
     coverage: { allSignificantElementsMapped: true, exclusions: [] } };
   const path = "fixtures/decomposition.json";
   const absolutePath = join(root, path);

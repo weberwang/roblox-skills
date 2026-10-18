@@ -39,6 +39,8 @@ node scripts/workflow-control.mjs check-project --repo D:\Games\my-game
 
 V2 模板另有待填 `decompositionRef`，必须指向[视觉拆解合同](../roblox-development-workflow/references/visual-decomposition.md)：绑定本对象 V1 效果图、稳定编号和各状态的中文框选标注图片，实际在回复中展示。检查器拒绝缺图或覆盖不全，不能仅凭摘要、架构图或批量记录完成 V2；图片和合同结构通过不等于用户视觉接受，也不改变 deliverables/manual 策略。
 
+V2 同一拆解合同还必须填写可执行的 `restoration` 还原标准与代表性组合计划。V3 通过现有阶段的 `production` 记录样板、复验和扩展事实：先在目标机位完成组合样板，取得当前轮次的真实人工接受，或精确授权范围内的自动视觉检查结论，才能批量生产/全场铺设。未接受只继续修样板；生成授权、技术 PASS、资源 ready 均不能替代。准确记录关系和机器检查边界统一见[阶段契约](references/stage-contract.md#v3-内部样板生产门)，不增加 V2.5 或另立审批清单。
+
 ## 实施与证据
 
 - `planned → implementing → validating → complete`；缺依赖时记录 `blocked`，解除后继续原工作项。阶段工具只改变当前阶段的活动/完成记录及相邻 stage，不自动完成整个工作项，也不执行引擎命令。

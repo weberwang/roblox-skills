@@ -1,7 +1,7 @@
 import { checkStages, createStageReview, STAGES } from "./stages.mjs";
 
 const DELIVERY_FIELDS = Object.freeze([
-  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "decompositionRef",
+  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "decompositionRef", "production",
 ]);
 
 /** 运行阶段校验并返回 CLI 可展示的局部状态，不把结构通过解释成引擎验收。 */
@@ -35,6 +35,8 @@ export function completeCurrentStage(item, repo, delivery, { now = new Date().to
   if (Object.hasOwn(delivery, "decompositionRef") && current.stage !== "V2") {
     throw new Error("只有 V2 阶段可以提交 decompositionRef");
   }
+  if (Object.hasOwn(delivery, "production") && current.stage !== "V3") throw new Error("只有 V3 阶段可以提交 production");
+  if (current.stage === "V3" && Object.hasOwn(delivery, "production")) preserveProductionHistory(current.production, delivery.production);
   if (typeof now !== "string" || !Number.isFinite(Date.parse(now)) || Date.parse(now) > Date.now()) throw new Error("阶段 completedAt 必须是实际且不晚于当前的时间");
 
   const updated = structuredClone(item);
@@ -58,6 +60,21 @@ export function completeCurrentStage(item, repo, delivery, { now = new Date().to
     }
   }
   return updated;
+}
+
+/** 已判断轮次与已开工扩展不可被完成输入删除或改写；待检查轮次可补充真实接受结论。 */
+function preserveProductionHistory(before, after) {
+  if (!after || !Array.isArray(after.sampleAttempts) || !Array.isArray(after.expansions)) throw new Error("V3 production 必须包含样板与扩展数组");
+  const samples = before?.sampleAttempts ?? [];
+  if (after.sampleAttempts.length < samples.length || samples.some((sample, index) => {
+    const updated = after.sampleAttempts[index];
+    if (["PASS", "FAIL"].includes(sample.acceptance?.result)) return JSON.stringify(sample) !== JSON.stringify(updated);
+    return ["id", "revision", "candidate", "viewId", "createdAt"].some((key) => sample[key] !== updated?.[key]);
+  })) throw new Error("不得删除或改写样板历史，修复须追加新轮次和新证据");
+  const expansions = before?.expansions ?? [];
+  if (after.expansions.length < expansions.length || expansions.some((entry, index) => JSON.stringify(entry) !== JSON.stringify(after.expansions[index]))) {
+    throw new Error("不得删除或改写已有扩展历史");
+  }
 }
 
 /** 仅推进一阶段；调用者不能指定目标阶段，也不能批量生成阶段历史。 */

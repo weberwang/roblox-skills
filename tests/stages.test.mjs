@@ -6,6 +6,7 @@ import { inProject } from "./helpers.mjs";
 import { advanceStage, completeCurrentStage, stageStatus } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
 import { createStageReview, STAGE_DELIVERABLES, STAGES } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
 import { createDecompositionFixture } from "./decomposition-fixture.mjs";
+import { createSampleFixture } from "./sample-fixture.mjs";
 
 const origin = Date.now() - 120_000;
 /** 将固定偏移转换为测试用 ISO 时间，避免依赖执行时的耗时。 */
@@ -50,13 +51,14 @@ function completeRecord(item, stage, startOffset, endOffset, path, { root, candi
     userMessageRef,
   };
   if (stage === "V2") record.decompositionRef = createDecompositionFixture(root, item, record).path;
+  if (stage === "V3") record.production.sampleAttempts.push(createSampleFixture(root, item, record));
   return record;
 }
 
 /** 将V3所需Edit证据绑定到当前工作项目标和候选。 */
 function addReadback(item, observedOffset = 20_000) {
   const target = item.target ?? {};
-  item.evidence.push({ id: "readback-v3", type: "readback", workItemId: item.id, candidate: item.candidate,
+  item.evidence.unshift({ id: "readback-v3", type: "readback", workItemId: item.id, candidate: item.candidate,
     result: "PASS", summary: "Edit 正式源回读", observedAt: stamp(observedOffset), path: "evidence/readback.txt",
     datamodel: "Edit", studioId: target.studioId, placeId: target.placeId, universeId: target.universeId });
 }
@@ -73,6 +75,7 @@ function v3Fixture(root) {
     deliverables: STAGE_DELIVERABLES.V3.map((id) => ({ id, summary: `${id} 已交付。` })),
     exitChecks: STAGE_DELIVERABLES.V3.map((id) => ({ id, result: "PASS", basis: `${id} 已核对。` })),
     presentedRef: "V3 实际展示", remainingIssues: [], nextAction: "进入 V4", reuse: [], evidenceIds: ["readback-v3"],
+    production: { sampleAttempts: [createSampleFixture(root, item, item.stageReviews.at(-1))], expansions: [] },
   };
   return { item, delivery };
 }
@@ -141,6 +144,7 @@ test("deliverables可连续逐阶段完成和推进且不需要用户批准", ()
     if (stage === "V3") {
       addReadback(current, clock + 250);
       delivery.evidenceIds = ["readback-v3"];
+      delivery.production = { sampleAttempts: [createSampleFixture(root, current, current.stageReviews.at(-1))], expansions: [] };
     }
     if (stage === "V4") assert.throws(() => completeCurrentStage(current, root, delivery), /validateExit/);
     current = completeCurrentStage(current, root, delivery, {
