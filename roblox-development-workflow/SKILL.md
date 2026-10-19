@@ -12,7 +12,7 @@ description: 使用 Roblox Studio 插件编排完整游戏开发或跨模块功�
 1. 先读项目与已有工作项，区分“技能工程”“本地源码游戏”“Studio Place”。技能工程任务不自动创建游戏或修改当前打开的 Place。
 2. 发现已连接 Studio 并读取模式；按 [项目发现](references/project-discovery.md) 与[有界只读探针](references/studio-probes.md) 确定目标、现有代码、同步来源和玩家主循环。证据仍无法消除的关键取舍，或用户明确要求拷问时，按[决策与变更交接](references/decision-change-control.md)调用[拷问技能](../roblox-game-grilling/SKILL.md)，闭合后回到原工作项。
 3. 展示六阶段进度：需求范围、全局基线、基础工程、场景/显示层生产、全局集成验证、发布。局部任务直接进入最早受影响步骤。
-4. 按[项目文档与清单](references/project-artifacts.md)初始化或复用 GDD/TDD、模块及资源登记；完整项目另按[项目依赖契约](../roblox-game-workflow-control/references/project-contract.md)登记工作项候选、前置依赖和最终集成项，多 Place 仅按需启用。[制作](../roblox-game-production/SKILL.md) 给出范围与验收，[架构](../roblox-game-architecture/SKILL.md) 确定服务端/客户端职责和模块接口。按[基础工程与集成](references/foundation-integration.md)冻结实施包与单写者，先完成代表性垂直切片。
+4. 按[工程目录与产物归档](references/project-layout.md)初始化或核对目录，再按[项目文档与清单](references/project-artifacts.md)初始化或复用 GDD/TDD、模块及资源登记；完整项目另按[项目依赖契约](../roblox-game-workflow-control/references/project-contract.md)登记工作项候选、前置依赖和最终集成项，多 Place 仅按需启用。[制作](../roblox-game-production/SKILL.md) 给出范围与验收，[架构](../roblox-game-architecture/SKILL.md) 确定服务端/客户端职责和模块接口。按[基础工程与集成](references/foundation-integration.md)冻结实施包与单写者，先完成代表性垂直切片。
 5. 按职责调用玩法、UI、资产、音频、反馈、数值、在线服务；只加载本次相关技能。写入遵守 [Studio 执行契约](references/studio-execution.md)。
 6. 推荐测试等级并自动执行已授权普通验证；由 [QA](../roblox-game-qa-performance/SKILL.md) 汇总技术证据，截图交用户检查。真实设备、上传、发布和付费单独核对授权。
 7. 以 [交付要求](references/delivery.md) 结束本次工作项；项目级交付执行 `check-project` 汇总全部登记工作项与集成结果。发布候选交 [发布技能](../roblox-game-release/SKILL.md)，不从 Play 成功推断已保存或已上线。
@@ -51,5 +51,9 @@ V1 冻结当前对象各必要状态的完整效果图。V2 按[视觉拆解交�
 每次阶段汇报列出当前阶段、实际交付、完成依据、剩余问题及下一步。已有有效成果记录复用来源、范围与当前剩余工作；全局美术方向确认不等于具体对象验收。技术覆盖与人工显示结论分开，尚无当前用户视觉判断时保持人工 NOT_RUN。发现旧记录批量登记或结论写错时保留原记录和候选产物，只修正有证据支持的内容，不倒填过程或撤销无关确认。
 
 可独立的研究、探索、实现和审查按项目代理规则委派；明确文件/实例所有权与验收，禁止多个代理并发写同一 Studio。图片生成或编辑由 image_generator 子代理使用 imagegen 执行，本技能不自行生成位图。
+
+产物按[目录规范](references/project-layout.md)归类：未引用加工文件进 `.tmp/`，待确认和已确认交付分别进 `artifacts/candidates/` 与 `artifacts/approved/`，正式游戏资源按类型进 `assets/`，工作项、合同与证据进 `.workflow-control/`。确认来源和状态仍由既有记录维护，不凭目录名判定通过；持久引用不能指向可清理临时文件。
+
+Git 按[最小提交与恢复](references/git-minimum.md)保留正式源、设计清单、登记工作项及其依赖，以及被保留记录递归引用的必要产物/证据；缓存、安装副本和未引用探索文件不入库。空目录由 `init-layout` 重建，不提交占位文件；不为减少文件数删除失败依据或历史确认，不自动 commit/push。
 
 项目记录保存在游戏工程，不写入技能包；不得把某次会话的 Studio ID、功能开关、Asset ID 或用户授权固化成全局默认值。未明确要求不建分支/worktree，不自动发起真机验收。

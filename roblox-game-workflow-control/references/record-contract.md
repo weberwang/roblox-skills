@@ -1,6 +1,6 @@
 # 工作项记录契约
 
-记录位置为游戏项目 `.workflow-control/work-items/<id>.json`；证据文件建议位于 `.workflow-control/evidence/`。技能包内不保存具体游戏的 Studio ID、Place ID、授权或验收结果。
+记录位置为游戏项目 `.workflow-control/work-items/<id>.json`。按[工程目录与产物归档](../../roblox-development-workflow/references/project-layout.md)，阶段交付 JSON、合同和实施包放 `.workflow-control/records/<工作项>/<候选>/<阶段>/`，证据放 `.workflow-control/evidence/<工作项>/<候选>/<阶段>/<尝试>/`；用户侧交付及正式资源分别进入 artifacts 与 assets 的对应目录，临时加工文件不作为持久引用。路径检查器验证项目边界与文件关系，不自动认证归类、内容或确认。技能包内不保存具体游戏的 Studio ID、Place ID、授权或验收结果。
 
 ## 必需字段
 
@@ -70,7 +70,7 @@ stagePolicy=deliverables 不额外要求每阶段人工批准，但仍须顺序�
 
 ## 拷问与产品决策
 
-decisionRefs 引用当前工作项的必要人工决策，记录通常存入 `.workflow-control/decisions/`。运行时按[决策记录约定](../../roblox-game-grilling/references/decision-record.md)检查：工作项和对象范围、记录修订、事实/假设/未知、问题选项与真实回答来源、完整结论及精确用户批准。pending、answered、rejected、无效/缺失引用或与当前修订不符的批准都会阻断完成；相同对象不能并列两份有效批准。
+decisionRefs 引用当前工作项的必要人工决策，记录存入 `.workflow-control/decisions/<工作项>/<决策ID>/r<修订>.json`。运行时按[决策记录约定](../../roblox-game-grilling/references/decision-record.md)检查：工作项和对象范围、记录修订、事实/假设/未知、问题选项与真实回答来源、完整结论及精确用户批准。pending、answered、rejected、无效/缺失引用或与当前修订不符的批准都会阻断完成；相同对象不能并列两份有效批准。
 
 superseded 记录必须显式指向同工作项、同 subject.id、更高 revision 的 approved 替代记录，且替代也在 decisionRefs 内。普通实现候选变化不撤销决策；只有目标或范围实质变化才处理受影响修订。不依赖未决项的已授权工作仍可继续；本地检查不核实消息真实性，也不执行 Studio 写入。
 

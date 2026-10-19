@@ -2,11 +2,15 @@
 
 此工具为现有 Roblox 游戏项目初始化本地设计和清单文档，并检查文档结构。它不连接 Roblox Studio、不执行 Play、不截屏、不启动服务，也不上传、保存或发布游戏。`ready` 只表示本地文档检查满足下述条件，不表示 Studio 中存在对应实现。
 
+完整目录职责、临时/候选/已确认产物、正式资源及过程记录位置见[工程目录与产物归档](project-layout.md)。先用 `init-layout` 补齐分类目录，再初始化文档；已有文档项目可以单独补目录，不必重跑 `init-docs`。`check-layout` 检查目录，`check-docs` 仍只检查本页文档合同，不认证产物归类或确认。
+
 ## 命令
 
 从已安装的 `roblox-development-workflow` 技能目录运行：
 
 ```powershell
+node scripts/workflow-files.mjs init-layout --repo D:\Games\my-game
+node scripts/workflow-files.mjs check-layout --repo D:\Games\my-game
 node scripts/workflow-files.mjs init-docs --repo D:\Games\my-game --project-id my-game
 node scripts/workflow-files.mjs init-docs --repo D:\Games\my-game --project-id my-game --include visual,assets,qa,release
 node scripts/workflow-files.mjs add-docs --repo D:\Games\my-game --project-id my-game --include assets,qa

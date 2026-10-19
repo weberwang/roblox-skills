@@ -41,7 +41,7 @@ V2 用户侧只直接展示图片，阶段汇报所需的实际交付、依据�
 
 ## 内部结构化合同
 
-复制[待填模板](../assets/templates/visual-decomposition.json)到游戏工程，例如 `docs/<工作项>-v2-decomposition.json`。模板不构成完成产物，空值、空集合及覆盖声明 false 会阻断 V2 完成。`stage-template` 导出的当前 V2 交付填写 `decompositionRef` 指向该项目内 JSON；其他阶段不使用此字段。`path`／`section` 仍定位内部阶段规格，`presentedRef` 记录实际展示来源，两者不能代替图片。
+复制[待填模板](../assets/templates/visual-decomposition.json)到游戏工程的 `.workflow-control/records/<工作项>/<候选>/V2/decomposition-r<修订>.json`。按[目录规范](project-layout.md)，冻结源图和实际展示的标注图进入 artifacts 的候选或已确认目录，检查截图与日志进入 evidence；合同通过真实相对路径引用它们，不引用可清理的 `.tmp/`。模板不构成完成产物，空值、空集合及覆盖声明 false 会阻断 V2 完成。`stage-template` 导出的当前 V2 交付填写 `decompositionRef` 指向该项目内 JSON；其他阶段不使用此字段。`path`／`section` 仍定位内部阶段规格，`presentedRef` 记录实际展示来源，两者不能代替图片。
 
 | 字段 | 约定 |
 | --- | --- |

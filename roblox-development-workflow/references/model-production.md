@@ -1,5 +1,7 @@
 # 3D 模型：V2 选型与 V3 生产接入
 
+本地中间文件、待审候选、已确认交付、正式资源与生产证据按[工程目录与产物归档](project-layout.md)分别保存；正式模型文件归 `assets/models/<资源ID>/r<修订>/`。本地路径与 Studio 临时/正式父节点分别记录，目录归档不代表已经插入、保存或上传资源。
+
 涉及场景模型、道具、建筑或可调几何时读取。本流程复用[阶段契约](../../roblox-game-workflow-control/references/stage-contract.md)、[视觉拆解合同](visual-decomposition.md)、[V3 样板门](visual-workflow.md#v3-代表性样板门)和[唯一资源总表](shared-asset-usage.md)。V2 决定生产方法、逐项还原规格和验收方式，V3 先完成代表性组合样板并取得当前样板接受，再扩展生产、装配与正式源回读；V4 验证运行消费。工具存在不代表应当生成，先检查已有合格资源。
 
 **3D 生产默认使用 Roblox Studio 插件流程。** V2 在 Roblox 现有资源、`generate_procedural_model`、`generate_mesh` 和原生几何之间选型；V3 在同一目标 Studio 内先制作并检查代表性组合样板，按既有视觉检查策略接受后，才批量生成、扩展铺设或完成全场布局，随后登记并回读正式 Edit 源。外部制作不是默认并列路线：仅在用户已明确指定，或记录 Roblox 的实际能力缺口并确定替代方案后采用；该决定未闭合时只暂停依赖它的组件。已有合格外部来源资源仍可按 REUSE 接入，不因此重开制作流程。

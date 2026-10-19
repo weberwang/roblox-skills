@@ -54,6 +54,8 @@ node D:\Git\roblox-skills\scripts\install-project-skills.mjs D:\Games\my-game
 用户要求“拷问”，或证据无法消除关键产品/体验/架构/视觉/成本/风险/发布取舍时，编排和领域技能统一调用 `$roblox-game-grilling`。它先查事实，再逐项提问、提交完整结论并保留真实批准，将记录加入 Work Item.decisionRefs。未决项阻断相应工作项完成；普通实现不新增审批，产品决定也不代替上传/付费/发布授权。
 
 ```powershell
+node .agents/skills/roblox-development-workflow/scripts/workflow-files.mjs init-layout --repo .
+node .agents/skills/roblox-development-workflow/scripts/workflow-files.mjs check-layout --repo .
 node .agents/skills/roblox-development-workflow/scripts/workflow-files.mjs init-docs --repo . --project-id my-game --include visual,assets,qa,release
 node .agents/skills/roblox-development-workflow/scripts/workflow-files.mjs check-docs --repo .
 node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs init-project --repo . --project-id my-game
@@ -62,6 +64,10 @@ node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs st
 node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs check --repo . --id first-loop
 node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs check-project --repo .
 ```
+
+游戏工程按[目录与产物归档规范](roblox-development-workflow/references/project-layout.md)组织：`.tmp/` 放未被引用的临时加工文件，`artifacts/candidates/` 与 `artifacts/approved/` 分别保存待确认与已确认交付，`assets/<类型>/<资源ID>/r<修订>/` 保存正式游戏资源，`.workflow-control/` 保存工作项、合同、决策与证据，`docs/` 保留长期设计与唯一总表。目录初始化不移动现有文件、不写入 Studio，也不生成确认；`check-layout` 只检查目录结构与路径安全。
+
+Git 仅保留[最小可恢复集合](roblox-development-workflow/references/git-minimum.md)：恢复入口、核心设计与启用的总表、项目登记工作项及其依赖、记录递归引用的合同/图片/证据，以及必要正式源和资源。临时缓存、可重装技能/依赖、未引用候选及空目录不提交；已被引用的候选和失败证据仍须保留。目标游戏的[最小忽略模板](roblox-development-workflow/assets/templates/game-project.gitignore)按需合并，不覆盖已有配置。
 
 新工作项尚未配置完整，`check` 返回缺失信息是正常行为。字段和证据见 [记录契约](roblox-game-workflow-control/references/record-contract.md)。本地检查不执行 Studio 命令，不自动批准或标记完成。
 

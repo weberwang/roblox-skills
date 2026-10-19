@@ -2,6 +2,8 @@
 
 在视觉拆解、资源生产/插入、跨工作项复用和资源变更时读取。项目唯一资源总表为 `docs/asset-register.json`，其格式、精确字段、创建和检查由[项目文档与清单工具](project-artifacts.md)维护；本文件只规定资源身份与接入证据，不另加 JSON Schema 或第二份账本。每个工作项遵守[视觉工作流](visual-workflow.md)的 `visualContractRef` 和现有单写者边界。
 
+按[工程目录与产物归档](project-layout.md)保存本地文件：正式游戏资源进入 `assets/<类型>/<资源ID>/r<修订>/{source,runtime}/`，候选交付进入 artifacts，来源/许可/回读等证据进入 `.workflow-control/evidence/`。资源总表引用实际文件与真实 DataModel/Asset ID，目录归档不替代许可、ready 或用户视觉接受；Studio 独有资源不伪造本地导出。
+
 ## 何时可以共享
 
 资源的 `revision` 与消费者的 `state`、`candidate`、`revision` 使用[资源消费绑定契约](../../roblox-game-workflow-control/references/asset-bindings.md)。工作项 `assetBindings` 必须精确绑定当前 active 消费与 Edit 回读；改版、退役或许可失效会阻断这些消费者。退役的历史引用保留为 historical，不要求无关工作项为历史记录重新验收。

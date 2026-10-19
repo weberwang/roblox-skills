@@ -9,6 +9,8 @@ description: 规划、查找、审查并接入 Roblox 的模型、材质、贴�
 
 先按[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)读取当前视觉基线，再按[共享资源登记与使用](../roblox-development-workflow/references/shared-asset-usage.md)查单一资源总表、消费者、许可和实际路径。模型生成、切分、材质配对、原位贴图替换及资源就绪边界均以该参考中的当前 Studio 工具事实为准。
 
+本地文件按[工程目录与产物归档](../roblox-development-workflow/references/project-layout.md)区分临时加工、待确认、已确认交付和正式游戏资源；正式模型、贴图、材质、UI、图片、动画及特效分别放入 assets 的对应类型目录，确认与消费证据保存到工作流目录，不把完整效果图当作运行资源。
+
 资源组合属于具体可见对象的 V3，开始正式 Edit 组合前核对其 V0–V2 退出与复用范围；生成资源成功或全局方向批准不能补齐对象阶段，也不证明消费界面已验收。按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)分别保留组合交付、正式源回读与当前仍需完成内容。
 
 V2 先按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)从冻结 V1 图枚举显著特征，确定图片、Roblox 原生、复用、模型、材质或特效路线，并在编号中文标注图中写明消费与生产边界。同步填写同一拆解合同的 `restoration`：绑定目标机位/FOV/视口/构图锚点，逐项指定轮廓、比例、位置、空间层次、色板、材质、纹理尺度、光照、水面/岸沿等显著表现及其生产方法、消费者和验证方式。只有真实测量才标 measured；未知和不适用都注明原因。复用公共资产仍保留本地拆解编号及公共修订；原生项和原子资产内部特征也不能遗漏。拆解图片交给 image_generator 制作并直接展示；禁止裁切效果图充当正式资源，不能因程序能绘制就降级特色视觉。

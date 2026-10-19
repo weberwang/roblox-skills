@@ -1,6 +1,6 @@
 # 决策记录约定
 
-本文件定义 Roblox 工作流拷问记录的权威 JSON 格式。工作项的 `decisionRefs` 必须存在；无待决事项时为空数组，有事项时填入项目相对 JSON 文件路径，文件通常放在 `.workflow-control/decisions/`。不存在专用的初始化命令；使用普通文件工具创建记录。本契约为 Roblox 控制面单独定义，不直接引用 Unity 工作流中的 YAML 记录模板或 `grilling-record` Schema 作为 Roblox 契约。
+本文件定义 Roblox 工作流拷问记录的权威 JSON 格式。工作项的 `decisionRefs` 必须存在；无待决事项时为空数组，有事项时填入项目相对 JSON 文件路径，按[目录规范](../../roblox-development-workflow/references/project-layout.md)放在 `.workflow-control/decisions/<工作项>/<决策ID>/r<修订>.json`。不存在专用的决策初始化命令；使用普通文件工具按需创建记录。决策按自身修订保存，不随普通实现候选变化复制。本契约为 Roblox 控制面单独定义，不直接引用 Unity 工作流中的 YAML 记录模板或 `grilling-record` Schema 作为 Roblox 契约。
 
 ## 字段与约束
 

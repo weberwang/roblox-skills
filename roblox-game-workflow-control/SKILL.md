@@ -7,6 +7,8 @@ description: 管理 Roblox 游戏开发的工作项、范围、实施包、证�
 
 这是项目工作项与交付记录的唯一控制面；领域技能提出实现和证据，不各自维护第二套全局状态。读取 [控制模型](references/control-model.md)，按需使用本技能的 `scripts/workflow-control.mjs`。
 
+阶段合同、实施包与证据按[工程目录与产物归档](../roblox-development-workflow/references/project-layout.md)分别存入 `.workflow-control/records/` 和 `.workflow-control/evidence/`，候选/已确认交付与正式资源进入 artifacts/assets 对应目录。持久引用不能留在 `.tmp/`；目录位置不代表用户确认或阶段完成。
+
 ## 开始与恢复
 
 1. 先读已有 `.workflow-control/work-items/`、项目说明和用户当前目标，复用同一工作项；不要为返修重建工作项。
@@ -23,13 +25,15 @@ description: 管理 Roblox 游戏开发的工作项、范围、实施包、证�
 
 从本技能目录调用，`--repo` 是游戏工程根目录，不能误用技能仓库目录：
 
+下面的阶段路径以 `candidate-1` 举例，实际使用已有工作项的当前候选。
+
 ```powershell
 node scripts/workflow-control.mjs init --repo D:\Games\my-game --id first-loop --type SCENE --objective "完成首个可游玩循环"
 node scripts/workflow-control.mjs status --repo D:\Games\my-game --id first-loop
 node scripts/workflow-control.mjs check --repo D:\Games\my-game --id first-loop
 node scripts/workflow-control.mjs stage-status --repo D:\Games\my-game --id first-loop
-node scripts/workflow-control.mjs stage-template --repo D:\Games\my-game --id first-loop --output docs/first-loop-v0-delivery.json
-node scripts/workflow-control.mjs complete-stage --repo D:\Games\my-game --id first-loop --delivery docs/first-loop-v0-delivery.json
+node scripts/workflow-control.mjs stage-template --repo D:\Games\my-game --id first-loop --output .workflow-control/records/first-loop/candidate-1/V0/delivery-r1.json
+node scripts/workflow-control.mjs complete-stage --repo D:\Games\my-game --id first-loop --delivery .workflow-control/records/first-loop/candidate-1/V0/delivery-r1.json
 node scripts/workflow-control.mjs advance-stage --repo D:\Games\my-game --id first-loop
 node scripts/workflow-control.mjs init-project --repo D:\Games\my-game --project-id my-game
 node scripts/workflow-control.mjs check-project --repo D:\Games\my-game

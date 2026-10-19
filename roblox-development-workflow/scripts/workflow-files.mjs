@@ -3,6 +3,7 @@
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { addOptionalProjectDocs, checkProjectDocs, initializeProjectDocs } from "./runtime/project-artifacts.mjs";
+import { checkProjectLayout, initializeProjectLayout } from "./runtime/project-layout.mjs";
 
 /** 解析严格的 `--名称 值` 参数，避免拼写错误被静默忽略。 */
 function parseOptions(args) {
@@ -46,10 +47,18 @@ function selectedIncludes(options) {
   return [...new Set(values)];
 }
 
-/** 分派文件工具命令；init-docs 拒绝 --force，check-docs 输出可机读报告。 */
+/** 分派目录和文档工具命令；每个子命令只接受明确定义的选项。 */
 export function main(args = process.argv.slice(2)) {
   const command = args[0];
   const options = parseOptions(args.slice(1));
+  if (command === "init-layout") {
+    rejectUnknownOptions(options, ["repo"]);
+    return initializeProjectLayout({ repo: requireOption(options, "repo") }).join("\n");
+  }
+  if (command === "check-layout") {
+    rejectUnknownOptions(options, ["repo"]);
+    return checkProjectLayout({ repo: requireOption(options, "repo") });
+  }
   if (command === "init-docs") {
     rejectUnknownOptions(options, ["repo", "project-id", "include"]);
     const paths = initializeProjectDocs({
@@ -72,7 +81,7 @@ export function main(args = process.argv.slice(2)) {
     rejectUnknownOptions(options, ["repo", "include"]);
     return checkProjectDocs({ repo: requireOption(options, "repo"), include: selectedIncludes(options) });
   }
-  throw new Error("用法：workflow-files.mjs <init-docs|add-docs|check-docs> --repo <项目路径> [--project-id <小写ID>] [--include visual,assets,qa,release]");
+  throw new Error("用法：workflow-files.mjs <init-layout|check-layout|init-docs|add-docs|check-docs> --repo <项目路径> [--project-id <小写ID>] [--include visual,assets,qa,release]");
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

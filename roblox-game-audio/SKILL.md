@@ -7,6 +7,8 @@ description: 规划并接入 Roblox 的音乐、音效、语音提示和空间�
 
 让每个声音服务于玩法信息、氛围或可访问性，并能在重复、停止和对象销毁时正确收尾。开始前读取体验方向、事件清单、资源登记及[Studio 插件路由](../roblox-development-workflow/references/studio-plugin-routing.md)。
 
+本地音频文件按[工程目录与产物归档](../roblox-development-workflow/references/project-layout.md)保存到 `assets/audio/<资源ID>/r<修订>/{source,runtime}/`，待审试听稿进入候选目录，来源/许可及播放证据进入 `.workflow-control/evidence/`；真实资源 ID 与消费者仍写入唯一资源总表，不凭文件归档推断可用或已授权上传。
+
 ## 职责与输入
 
 - 检查现有 Sound、SoundGroup、资源 ID、调用脚本、触发频率、播放位置和目标设备预算。
