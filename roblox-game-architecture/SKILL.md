@@ -13,7 +13,7 @@ description: 设计或审查 Roblox Experience 的 DataModel、服务边界、�
 
 ## 阶段接入
 
-按[架构阶段交付](../roblox-development-workflow/references/foundation-integration.md#架构在-v0v4-中的交付)参与已有 V0–V4：V0 发现实际结构与未知项，V1 明确流程和状态，V2 完成路径、职责、状态所有权、依赖、接口和验证计划，V3 正式组合后回读，V4 以请求、同步及生命周期轨迹验证。新可见对象必须从 V0 开始；已有架构只作为有明确范围的复用来源，不能代替当前对象交付。阶段退出遵循控制器，不因架构工作默认增加人工审批。
+按[架构阶段交付](../roblox-development-workflow/references/foundation-integration.md#架构在-v0v4-中的交付)参与已有 V0–V4：V0 发现实际结构与未知项，V1 明确流程和状态，V2 完成路径、职责、状态所有权、依赖、接口和验证计划，V3 完成正式资源生产、资源接受和登记，V4 正式组合场景并回读源，再以请求、同步及生命周期轨迹验证。新可见对象必须从 V0 开始；已有架构只作为有明确范围的复用来源，不能代替当前对象交付。V2 双图片确认、V3 资源接受和 V4 人工显示门按阶段合同执行；其他普通阶段遵循 deliverables/manual 策略。
 
 可见对象的 V2 还需[冻结 V1 的编号视觉拆解图](../roblox-development-workflow/references/visual-decomposition.md)，与内部结构、消费节点和装配关系共用稳定身份。模块依赖图或 DataModel 树可作内部架构附件，不能替代用户侧中文框选标注图片；框选分区不能自行决定实例父子关系。
 

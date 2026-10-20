@@ -58,11 +58,11 @@ scenarios 列出 normal-play、repeated-feedback、event-peak、overlap-peak，�
 
 visualContractRef 指向项目内 JSON，包含 version=1、workItemId、orientations、inputs、locales、viewports、safeAreaPolicy、nodes。每个视口记录唯一 id、正数 width/height 与目标 orientation；每个节点有 id、game.路径 path、parentId（根为 null）、role 和 layoutRef。layoutRef 说明真实布局参照，父子关系不能缺失或成环。细节见[响应式合同](../../roblox-development-workflow/references/responsive-ui-contract.md)。
 
-stageReviews 是从 V0 开始的连续前缀，当前 stage 对应最后一项；前置必须 complete，只有当前阶段可 active。每项包含稳定 id、stage、workItemId、candidate、status、真实 startedAt/completedAt、path/section、固定阶段 deliverables、逐条 exitChecks、presentedRef、remainingIssues、nextAction、reuse、evidenceIds 和 userMessageRef。准确字段与退出要求见[阶段契约](stage-contract.md)。V3/4 绑定当前候选，V0–V2 的有效交付不因无关文案变化失效；V3 另核对当前正式 Edit 回读。
+stageReviews 是从 V0 开始的连续前缀，当前 stage 对应最后一项；前置必须 complete，只有当前阶段可 active。每项包含稳定 id、stage、workItemId、candidate、status、真实 startedAt/completedAt、path/section、固定阶段 deliverables、逐条 exitChecks、presentedRef、remainingIssues、nextAction、reuse、evidenceIds 和 userMessageRef。准确字段与退出要求见[阶段契约](stage-contract.md)。V3/V4 绑定当前候选，V0–V2 的有效交付不因无关文案变化失效；V3 核对当前资源 visual 证据，V4 核对正式 Edit 回读。
 
 V2 另含 `decompositionRef`，定位项目内的[视觉拆解合同](../../roblox-development-workflow/references/visual-decomposition.md)。该合同与实际标注图片同编号，绑定本工作项已完成 V1 的冻结效果图，覆盖组件、来源、消费、装配、生产边界和状态；用户侧必须直接展示中文框选引线图片。完整摘要或 Markdown 引用不代替该合同与图片。检查仅验证文件和引用结构，不自动填写人工视觉结论或增加默认逐阶段审批。
 
-V2 合同的 `restoration` 记录逐项还原要求、目标机位和组合样板计划；V3 阶段另有 `production:{sampleAttempts:[],expansions:[]}`，字段、样板 visual 证据绑定和人工/明确授权自动检查的区别统一见[阶段契约的样板门](stage-contract.md#v3-内部样板生产门)。它不改变最终 `visualReview`，不建立第二份资产表或阶段状态机。资源技术 ready 与消费者样板及全场视觉验收分别取证。
+V2 合同的 `restoration` 记录逐项还原要求、目标机位和 V4 组合样板计划，并在 `decompositionConfirmation` 与 `layoutConfirmation` 中记录按序人工确认；V3 的 `resourceAcceptance` 人工接受当前资源范围。原 `production:{sampleAttempts:[],expansions:[]}` 位于 V4，字段、样板 visual 证据绑定和人工/明确授权自动检查的区别统一见[阶段契约的资源接受与场景样板门](stage-contract.md#v3-资源接受与-v4-场景样板门)。这些记录不改变最终 `visualReview`，不建立第二份资产表或阶段状态机。资源技术 ready 与资源人工接受、消费者样板及全场视觉验收分别取证。
 
 同一文档可被多个阶段引用，但 section 必须定位各自唯一 Markdown 标题及非空正文，不能复用同一章节冒充多个阶段。每阶段先完成交付并展示，核对逐项退出条件，才用 complete-stage 完成、advance-stage 单步进入下一阶段；禁止准备脚本直接设置 V2/V3，禁止用批量记录或运行汇总代替真实推进。stage-template 仅生成当前阶段的待填交付，不自动填写完成或人工判断。
 

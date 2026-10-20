@@ -6,6 +6,7 @@ import { checkVisible } from "./visible.mjs";
 import { checkDecisions } from "./decisions.mjs";
 import { checkAssets } from "./assets.mjs";
 import { checkProjectDependencies } from "./project.mjs";
+import { checkFoundationBaseline } from "./baseline.mjs";
 
 /** 当前记录使用完整的目标、验收和阶段交付契约，不保留旧格式旁路。 */
 export const RECORD_VERSION = 2;
@@ -61,6 +62,7 @@ export function assessLocal(item, repo) {
   }
   const checks = checkImplementation(item, context);
   const usable = checkEvidence(item, checks, context);
+  checkFoundationBaseline(item, context);
   for (const type of Array.isArray(item.requiredEvidence) ? item.requiredEvidence : []) {
     if (![...usable.values()].some((entry) => entry.type === type)) blockers.push(`缺少当前候选 PASS 证据：${type}`);
   }

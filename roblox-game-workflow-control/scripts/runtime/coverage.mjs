@@ -1,6 +1,9 @@
+import { getVisualValidationMode } from "./visual-policy.mjs";
+
 /** 可见 Play 的视口、输入、语言与情景必须对应获批合同中的单个用例。 */
 export function checkCoverage(item, contract, usable, context, scenarios) {
   const { require, blockers } = context;
+  const validationMode = getVisualValidationMode(contract, context);
   const declared = contract?.coverage;
   require(declared && Number.isSafeInteger(declared.revision) && declared.revision > 0
     && typeof declared.userMessageRef === "string" && !!declared.userMessageRef.trim()
@@ -34,15 +37,18 @@ export function checkCoverage(item, contract, usable, context, scenarios) {
     if (valid) validCases.set(testCase.id, { ...testCase, viewport });
   }
 
-  // 已声明的每个目标维度都要进入明确批准的用例清单，避免遗漏一类设备或语言。
-  for (const viewport of Array.isArray(contract?.viewports) ? contract.viewports : []) {
-    if (!declaredCases.some((testCase) => testCase?.viewportId === viewport?.id)) blockers.push(`coverage 缺少视口用例：${viewport?.id}`);
-  }
-  for (const input of Array.isArray(contract?.inputs) ? contract.inputs : []) {
-    if (!declaredCases.some((testCase) => testCase?.input === input)) blockers.push(`coverage 缺少输入方式用例：${input}`);
-  }
-  for (const locale of Array.isArray(contract?.locales) ? contract.locales : []) {
-    if (!declaredCases.some((testCase) => testCase?.locale === locale)) blockers.push(`coverage 缺少语言用例：${locale}`);
+  // usability 仅覆盖获批用例与代表性方向；exact 则要求声明维度的完整组合。
+  if (validationMode === "exact") {
+    for (const viewport of Array.isArray(contract?.viewports) ? contract.viewports : []) {
+      if (!declaredCases.some((testCase) => testCase?.viewportId === viewport?.id)) blockers.push(`exact coverage 缺少视口用例：${viewport?.id}`);
+    }
+    for (const input of Array.isArray(contract?.inputs) ? contract.inputs : []) {
+      if (!declaredCases.some((testCase) => testCase?.input === input)) blockers.push(`exact coverage 缺少输入方式用例：${input}`);
+    }
+    for (const locale of Array.isArray(contract?.locales) ? contract.locales : []) {
+      if (!declaredCases.some((testCase) => testCase?.locale === locale)) blockers.push(`exact coverage 缺少语言用例：${locale}`);
+    }
+    requireExactCombinations(contract, validCases, scenarios, blockers);
   }
   for (const orientation of Array.isArray(contract?.orientations) ? contract.orientations : []) {
     const hasViewport = [...viewports.values()].some((viewport) => viewport.orientation === orientation && matchesViewportOrientation(viewport));
@@ -91,6 +97,28 @@ export function checkCoverage(item, contract, usable, context, scenarios) {
       const testCase = evidenceCases.get(evidenceId);
       if (!testCase || testCase.scenario !== scenarioId) {
         require(false, `情景 ${scenarioId} 引用的 Play 未通过同情景 coverage：${evidenceId}`);
+      }
+    }
+  }
+}
+
+/** exact 表示每个声明的可见维度组合都要有独立批准用例与运行证据。 */
+function requireExactCombinations(contract, validCases, scenarios, blockers) {
+  const viewports = Array.isArray(contract?.viewports) ? contract.viewports : [];
+  const inputs = Array.isArray(contract?.inputs) ? contract.inputs : [];
+  const locales = Array.isArray(contract?.locales) ? contract.locales : [];
+  const requiredScenarios = [...scenarios]
+    .filter(([, scenario]) => scenario?.required === true)
+    .map(([id]) => id);
+  const approved = new Set([...validCases.values()].map((entry) =>
+    `${entry.viewportId}\u0000${entry.input}\u0000${entry.locale}\u0000${entry.scenario}`));
+  for (const viewport of viewports) {
+    for (const input of inputs) {
+      for (const locale of locales) {
+        for (const scenario of requiredScenarios) {
+          const key = `${viewport?.id}\u0000${input}\u0000${locale}\u0000${scenario}`;
+          if (!approved.has(key)) blockers.push(`exact coverage 缺少组合：${viewport?.id}/${input}/${locale}/${scenario}`);
+        }
       }
     }
   }

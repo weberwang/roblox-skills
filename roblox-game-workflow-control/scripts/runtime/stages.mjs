@@ -3,6 +3,7 @@ import { extname } from "node:path";
 import { checkEvidence, STUDIO_EVIDENCE_TYPES } from "./evidence.mjs";
 import { validateDecomposition } from "./decomposition.mjs";
 import { checkSampleProduction, createSampleProduction } from "./sample-production.mjs";
+import { checkResourceAcceptance, createResourceAcceptance } from "./resource-acceptance.mjs";
 import { projectPath } from "./io.mjs";
 
 /** 可见工作项按固定顺序推进；每项交付物对应一个可核对的完成条件。 */
@@ -13,8 +14,8 @@ export const STAGE_DELIVERABLES = Object.freeze({
   V0: Object.freeze(["identity", "target", "scope", "host", "dependencies", "existingResources", "unknowns"]),
   V1: Object.freeze(["playerFlow", "states", "informationHierarchy", "layoutGoals", "visualReferences", "acceptanceScope"]),
   V2: Object.freeze(["instanceStructure", "componentResponsibilities", "dataInterfaces", "resourceConsumption", "ownership", "verificationPlan", "visualDecomposition"]),
-  V3: Object.freeze(["editComposition", "wiring", "sourceReadback", "viewableDelivery"]),
-  V4: Object.freeze(["runtimeIntegration", "inputLifecycle", "console", "dynamicCoverage", "humanDisplay"]),
+  V3: Object.freeze(["resourceProduction", "resourceAcceptance", "assetIdentity", "productionRecords"]),
+  V4: Object.freeze(["editComposition", "wiring", "sourceReadback", "viewableDelivery", "runtimeIntegration", "inputLifecycle", "console", "dynamicCoverage", "humanDisplay"]),
 });
 
 const ISO_DATE = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/;
@@ -56,7 +57,8 @@ export function createStageReview(item, stage, now = new Date().toISOString()) {
     userMessageRef: "",
     exitCheckHistory: [],
     ...(stage === "V2" ? { decompositionRef: "" } : {}),
-    ...(stage === "V3" ? { production: createSampleProduction() } : {}),
+    ...(stage === "V3" ? { resourceAcceptance: createResourceAcceptance(item) } : {}),
+    ...(stage === "V4" ? { production: createSampleProduction() } : {}),
   };
 }
 
@@ -163,7 +165,8 @@ export function checkStages(item, context, { requireComplete = false } = {}) {
       }
       checkInProgressShape(review, context);
     }
-    if (review.stage === "V3") checkSampleProduction(item, review, context);
+    if (review.stage === "V3") checkResourceAcceptance(item, review, context);
+    if (review.stage === "V4") checkSampleProduction(item, review, context);
   }
   const last = reviews.at(-1);
   report(context, STAGES.includes(item.stage) && item.stage === last?.stage, "item.stage 必须与最后一条阶段记录一致");
@@ -199,7 +202,8 @@ function checkInProgressShape(review, context) {
   } else {
     report(context, !Object.hasOwn(review, "decompositionRef"), `只有 V2 阶段可以记录 decompositionRef：${review.stage}`);
   }
-  report(context, review.stage === "V3" || !Object.hasOwn(review, "production"), `只有 V3 阶段可以记录 production：${review.stage}`);
+  report(context, review.stage === "V4" || !Object.hasOwn(review, "production"), `只有 V4 阶段可以记录 production：${review.stage}`);
+  report(context, review.stage === "V3" || !Object.hasOwn(review, "resourceAcceptance"), `只有 V3 阶段可以记录 resourceAcceptance：${review.stage}`);
   report(context, Array.isArray(review.remainingIssues), `阶段 remainingIssues 必须是数组：${review.stage}`);
   report(context, Array.isArray(review.reuse), `阶段 reuse 必须是数组：${review.stage}`);
   checkReuse(review, context);
@@ -237,7 +241,7 @@ function checkCompletedReview(item, review, context, repo) {
   if (["V3", "V4"].includes(review.stage)) {
     report(context, review.candidate === item.candidate, `${review.stage} 必须绑定当前候选`);
   }
-  if (review.stage === "V3") checkEditReadback(item, review, context, repo);
+  if (review.stage === "V4") checkEditReadback(item, review, context, repo);
 }
 
 /** V2 必须指向有效拆解合同；合同仅校验结构和图片元数据，不代替人工看图。 */
@@ -266,12 +270,12 @@ function checkReuse(review, context) {
   }
 }
 
-/** V3 的正式源回读必须是当前候选、目标身份匹配的 Edit 文件证据。 */
+/** 正式场景装配属于 V4，资源验收不能冒充场景源回读。 */
 function checkEditReadback(item, review, context, repo) {
   const target = item.target;
   const validTarget = hasText(target?.studioId) && Number.isSafeInteger(target?.placeId) && target.placeId >= 0
     && Number.isSafeInteger(target?.universeId) && target.universeId >= 0;
-  report(context, validTarget, "V3 Edit readback 前必须先绑定非空 Studio 与有效 Place/Universe 身份");
+  report(context, validTarget, "V4 Edit readback 前必须先绑定非空 Studio 与有效 Place/Universe 身份");
   if (!validTarget) return;
 
   const evidenceIds = new Set(Array.isArray(review.evidenceIds) ? review.evidenceIds : []);
@@ -287,11 +291,11 @@ function checkEditReadback(item, review, context, repo) {
     blockers,
     require: (condition, message) => { if (!condition) errors.push(message); },
   });
-  for (const message of errors) context.require(false, `V3 Edit readback：${message}`);
-  for (const message of blockers) context.blockers.push(`V3 Edit readback：${message}`);
+  for (const message of errors) context.require(false, `V4 Edit readback：${message}`);
+  for (const message of blockers) context.blockers.push(`V4 Edit readback：${message}`);
   const usable = [...verification.values()].filter((entry) => entry.candidate === item.candidate && entry.datamodel === "Edit");
   for (const entry of usable) {
-    report(context, Date.parse(entry.observedAt) <= Date.now(), `V3 Edit readback 时间不能晚于当前时间：${entry.id}`);
+    report(context, Date.parse(entry.observedAt) <= Date.now(), `V4 Edit readback 时间不能晚于当前时间：${entry.id}`);
   }
-  report(context, usable.length > 0, "V3 必须引用通过完整证据校验的当前候选 Edit readback");
+  report(context, usable.length > 0, "V4 必须引用通过完整证据校验的当前候选 Edit readback");
 }

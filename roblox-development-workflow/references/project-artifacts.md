@@ -79,6 +79,8 @@ node scripts/workflow-files.mjs check-docs --repo D:\Games\my-game --include vis
 
 ### `visual-baseline.json`
 
+以下展示未配置状态的基础字段；达到视觉依赖基础工程包的 `ready` 门槛时，还须满足候选和选择要求。
+
 ```json
 {
   "version": 1,
@@ -97,9 +99,11 @@ node scripts/workflow-files.mjs check-docs --repo D:\Games\my-game --include vis
 }
 ```
 
-状态只能为 `unconfigured` 或 `ready`。`artBrief` 持久化主题、目标受众、核心循环、观看情境、可读性目标和舒适度约束；初始值为空，不得替用户编造。ready 基线要求这六项均有实际内容，并通过 `userMessageRef` 引用用户真实提供或确认简报的消息；工具不得生成用户确认。`targets` 可记录已确认的规范，例如色彩、字体或语言数量，不预设固定限制。ready 还要求目标列表非空且唯一，`evidenceRefs` 指向项目内已存在的非空证据文件。结构检查不会自动读取、分析或验收截图；视觉效果由用户人工检查。
+`visual-baseline.json` 作为全局前置仅适用于有视觉依赖的 `FOUNDATION`，或 `type=PROJECT` 且仅含 `SHARED`/`MODULE` 的基础工程包。仅 `implementation.visualDependency === true` 或非空 `visualContractRef` 时触发；`baselineRef` 默认指向 `docs/visual-baseline.json`。不从任意 `assetBindings` 或资产表自由字符串推断视觉依赖。纯工程基础包豁免。普通场景/显示层即使引用模块，也仍按自身 V1–V4 交付，不因模块单元或全局基线缺失而误触发该门。
 
-视觉基线确认仅覆盖全局方向。具体场景/界面复用时须在阶段交付中注明来源、适用范围与剩余工作，不能据此认定其 V1、V3 或人工显示验收已完成。
+状态只能为 `unconfigured` 或 `ready`。`artBrief` 持久化主题、目标受众、核心循环、观看情境、可读性目标和舒适度约束；初始值为空，不得替用户编造。ready 基线要求这六项均有实际内容，并通过 `userMessageRef` 引用用户真实提供或确认简报的消息；工具不得生成用户确认。`targets` 可记录已确认的规范，例如色彩、字体或语言数量，不预设固定限制。ready 还要求三个生成候选，每项包含 `{id,image,generationRef}`；`generationRef` 必须为 `{candidateId,image,tool,generatedAt}`，将生成来源绑定对应候选及图片，且生成时间早于选择。`selection.presentedCandidateIds` 按原顺序包含展示的三个候选，用户只人工选择其中一个；五维质量 `themeFit`、`audienceFit`、`gameplayReadability`、`viewingComfort`、`artCompletion` 均为 PASS，并将所选方向和依据冻结。`evidenceRefs` 指向项目内已存在的非空证据文件，候选图片需通过结构解码检查。结构检查不会自动读取、分析或验收截图；视觉效果由用户人工检查。
+
+视觉基线确认仅覆盖全局方向。具体场景/界面复用时须在阶段交付中注明来源、适用范围与剩余工作，不能据此认定其 V1、V2 图片确认、V3 资源接受、V4 场景样板或人工显示验收已完成。
 
 ### `asset-register.json`
 

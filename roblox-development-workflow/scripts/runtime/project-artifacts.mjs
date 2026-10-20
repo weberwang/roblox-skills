@@ -9,6 +9,7 @@ import {
 import { dirname, resolve } from "node:path";
 import { assertNoLinks, projectPath, readJson, writeNewJson, writeNewText } from "../../../roblox-game-workflow-control/scripts/runtime/io.mjs";
 import { validateAssetRegister as validateSharedAssetRegister } from "../../../roblox-game-workflow-control/scripts/runtime/assets.mjs";
+import { BASELINE_QUALITY_DIMENSIONS, validateVisualBaseline } from "../../../roblox-game-workflow-control/scripts/runtime/baseline.mjs";
 
 const CORE_DOCS = Object.freeze([
   "project-profile.json",
@@ -62,6 +63,18 @@ const VISUAL_TEMPLATE = Object.freeze({
   userMessageRef: "",
   targets: [],
   evidenceRefs: [],
+  candidates: [],
+  selection: {
+    mode: "",
+    candidateId: "",
+    presentedCandidateIds: [],
+    userMessageRef: "",
+    reviewedAt: "",
+    qualityResults: Object.fromEntries(BASELINE_QUALITY_DIMENSIONS.map((dimension) => [dimension, {
+      status: "NOT_RUN", reason: "", userMessageRef: "",
+    }])),
+  },
+  frozenAt: "",
 });
 
 /** 资源清单从空数组开始，避免虚构资产来源、许可或 Asset ID。 */
@@ -534,34 +547,10 @@ export function checkProjectDocs({ repo, include = [] }) {
     if (name === "visual-baseline.json") {
       const visual = readDocumentJson(root, name, errors);
       if (visual === READ_FAILED) continue;
-      if (visual === null || typeof visual !== "object" || Array.isArray(visual)) {
-        errors.push("visual-baseline.json 根必须为对象。");
-        continue;
-      }
-      if (visual.version !== 1 || !["unconfigured", "ready"].includes(visual.status)) errors.push("visual-baseline.version/status 无效。");
-      const briefFields = ["theme", "audience", "coreLoop", "viewingContext", "readabilityGoal", "comfortConstraints"];
-      if (visual.artBrief === null || typeof visual.artBrief !== "object" || Array.isArray(visual.artBrief)) {
-        errors.push("visual-baseline.artBrief 必须为对象。");
-      } else {
-        for (const field of briefFields) {
-          if (typeof visual.artBrief[field] !== "string") errors.push(`visual-baseline.artBrief.${field} 必须为字符串。`);
-        }
-      }
-      if (typeof visual.userMessageRef !== "string") errors.push("visual-baseline.userMessageRef 必须为字符串。");
-      const targets = validateStringList(visual.targets, "visual-baseline.targets", errors);
-      const refs = validateStringList(visual.evidenceRefs, "visual-baseline.evidenceRefs", errors);
-      refs.forEach((reference, index) => validateProjectRelativeReference(root, reference, `visual-baseline.evidenceRefs[${index}]`, errors));
-      if (visual.status === "unconfigured") blockers.push("视觉基线状态为 unconfigured，尚无已确认基线。");
-      if (visual.status === "ready") {
-        if (targets.length === 0 || refs.length === 0) errors.push("ready 视觉基线必须包含目标和证据文件。");
-        if (!isActualText(visual.userMessageRef)) errors.push("ready 视觉基线必须引用真实的 userMessageRef。");
-        if (visual.artBrief && typeof visual.artBrief === "object" && !Array.isArray(visual.artBrief)) {
-          for (const field of briefFields) {
-            if (!isActualText(visual.artBrief[field])) errors.push(`ready 视觉基线的 artBrief.${field} 必须填写实际内容。`);
-          }
-        }
-        refs.forEach((reference, index) => validateEvidenceFile(root, reference, `visual-baseline.evidenceRefs[${index}]`, errors));
-      }
+      validateVisualBaseline(visual, root, {
+        require: (condition, message) => { if (!condition) errors.push(message); },
+        blockers,
+      }, "visual-baseline");
     }
     if (name === "asset-register.json") {
       const assets = readDocumentJson(root, name, errors);

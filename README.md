@@ -6,7 +6,7 @@
 
 工作流控制维护范围、实施包和证据；开发编排调度领域技能；Studio 插件负责真实引擎操作。项目进度沿用六阶段：需求范围、全局基线、基础工程、场景/显示层生产、全局集成验证、发布。
 
-可见对象按 V0 分流 → V1 定义 → V2 拆解 → V3 资源组合 → V4 运行接入组织。每一步保留交付，视觉结果由用户检查；已有授权范围内的普通实施和测试自动推进，不照搬 Unity 的 API、资源 GUID 或 Editor 工具链。
+可见对象按 V0 分流 → V1 定义 → V2 拆解与布局确认 → V3 资源生产和接受 → V4 场景装配与运行接入组织。每一步保留交付，视觉结果由用户检查；普通阶段可按 deliverables 连续推进，但 V2 双图片确认、V3 资源接受和 V4 视觉验收是必要人工门。
 
 项目文档、资源登记和模块依赖由[文件工具](roblox-development-workflow/references/project-artifacts.md)维护；[基础工程与集成](roblox-development-workflow/references/foundation-integration.md)明确空壳、代表性垂直切片和全局回归的不同交付。视觉对象按[布局合同](roblox-development-workflow/references/responsive-ui-contract.md)、[共享资源](roblox-development-workflow/references/shared-asset-usage.md)和[动画交接](roblox-development-workflow/references/animation-intent-contract.md)实现，不依赖生成工具未提供的 UV、绑定或动画制作能力。
 
@@ -67,13 +67,15 @@ node .agents/skills/roblox-game-workflow-control/scripts/workflow-control.mjs ch
 
 游戏工程按[目录与产物归档规范](roblox-development-workflow/references/project-layout.md)组织：`.tmp/` 放未被引用的临时加工文件，`artifacts/candidates/` 与 `artifacts/approved/` 分别保存待确认与已确认交付，`assets/<类型>/<资源ID>/r<修订>/` 保存正式游戏资源，`.workflow-control/` 保存工作项、合同、决策与证据，`docs/` 保留长期设计与唯一总表。目录初始化不移动现有文件、不写入 Studio，也不生成确认；`check-layout` 只检查目录结构与路径安全。
 
-Git 仅保留[最小可恢复集合](roblox-development-workflow/references/git-minimum.md)：恢复入口、核心设计与启用的总表、项目登记工作项及其依赖、记录递归引用的合同/图片/证据，以及必要正式源和资源。临时缓存、可重装技能/依赖、未引用候选及空目录不提交；已被引用的候选和失败证据仍须保留。目标游戏的[最小忽略模板](roblox-development-workflow/assets/templates/game-project.gitignore)按需合并，不覆盖已有配置。
+阶段完成且验证通过后，代理自动将本任务必要文件及递归引用在当前分支创建本地 Git 提交。提交只包含明确归属当前任务的路径；不创建分支或 worktree，不推送。临时缓存、可重装技能/依赖、未引用候选及空目录不提交；已被引用的候选和失败证据仍须保留。文件归属不明确或验证未通过时不提交并报告原因。完整边界见[最小提交与恢复](roblox-development-workflow/references/git-minimum.md)；目标游戏的[最小忽略模板](roblox-development-workflow/assets/templates/game-project.gitignore)按需合并，不覆盖已有配置。
 
 新工作项尚未配置完整，`check` 返回缺失信息是正常行为。字段和证据见 [记录契约](roblox-game-workflow-control/references/record-contract.md)。本地检查不执行 Studio 命令，不自动批准或标记完成。
 
-新场景/显示层始终以 active V0 开始，按[阶段契约](roblox-game-workflow-control/references/stage-contract.md)逐步交付：`stage-status` 查看当前阶段，`stage-template --output <项目内JSON>` 导出待填交付，完成并展示实际内容后用 `complete-stage --delivery <项目内JSON>` 核对退出条件，再用 `advance-stage` 进入下一阶段。deliverables 允许连续推进，manual 另需真实逐阶段确认；两者都不能批量补齐阶段或直接设为 V4。
+新场景/显示层始终以 active V0 开始，按[阶段契约](roblox-game-workflow-control/references/stage-contract.md)逐步交付：`stage-status` 查看当前阶段，`stage-template --output <项目内JSON>` 导出待填交付，完成并展示实际内容后用 `complete-stage --delivery <项目内JSON>` 核对退出条件，再用 `advance-stage` 进入下一阶段。V2 先确认拆解图，再生成布局图并单独确认；V3 完成正式资源生产、资源级人工接受和登记；V4 才正式装配场景、接线、回读 Edit 源并运行验收。deliverables 允许普通阶段连续推进，manual 另需真实逐阶段确认；两者都不能绕过必要人工门、批量补齐阶段或直接设为 V4。
 
-V2 对齐 Unity 的可见对象拆解：在冻结 V1 完整效果图上做稳定编号框选与图内中文引线标注，并直接展示图片。内部结构、来源路线、消费、装配、生产边界和状态通过 `decompositionRef` 与图对应；缺图或覆盖不全不能完成 V2。具体格式和待填模板见[视觉拆解交付](roblox-development-workflow/references/visual-decomposition.md)，结构检查不代表人工视觉验收。
+V2 在冻结 V1 完整效果图上做稳定编号框选与图内中文引线标注，并直接展示图片，先取得绑定当前拆解图的真实确认；之后生成布局图并展示，布局确认引用拆解确认且绑定当前布局图。内部结构、来源路线、消费、装配、生产边界和状态通过 `decompositionRef` 与图对应；缺任一图片或确认不能完成 V2。具体格式和字段见[视觉拆解交付](roblox-development-workflow/references/visual-decomposition.md)，结构检查不代表人工视觉验收。
+
+全局基线门仅适用于有视觉依赖的 `FOUNDATION`，或 `type=PROJECT` 且仅含 `SHARED`/`MODULE` 的基础工程包；仅 `implementation.visualDependency === true` 或非空 `visualContractRef` 触发，`baselineRef` 默认指向 `docs/visual-baseline.json`。不从任意 `assetBindings` 或资产表自由字符串推断视觉依赖。基线记录三个候选及生成来源，由 `selection.presentedCandidateIds` 按原顺序绑定展示的候选，并唯一人工选择其一；五维质量须 PASS，选择和来源须冻结。候选 `generationRef` 绑定候选图片及工具、生成时间，图片需结构解码。程序化文本启用时，`requiredLanguages` 为 en、zh-CN、ja、ru、es，且也列入 `visualContract.locales`，逐语言记录换行策略、禁止截断和显示适配证据；关闭时保留完整空结构。视觉验证默认 `usability`，仅在明确要求精确还原时使用 `exact`。
 
 当前工作项版本为 2：每条验收目标和计划检查都绑定当前证据，Studio 证据同时核对工作项、候选、Studio、Place、Universe 与采集时间。未发布工程回读得到的 Place/Universe 可以是 0，未知值保持 null。可见交付保留 V0–V4 产物、视觉目标合同、五项人工美术结论和适用动态情景；复杂交付另需独立领域审查。仅填写 PASS 或放入无关日志不能满足记录检查。
 

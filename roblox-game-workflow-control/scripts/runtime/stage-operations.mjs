@@ -1,7 +1,7 @@
 import { checkStages, createStageReview, STAGES } from "./stages.mjs";
 
 const DELIVERY_FIELDS = Object.freeze([
-  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "decompositionRef", "production",
+  "path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "decompositionRef", "production", "resourceAcceptance",
 ]);
 
 /** 运行阶段校验并返回 CLI 可展示的局部状态，不把结构通过解释成引擎验收。 */
@@ -35,8 +35,9 @@ export function completeCurrentStage(item, repo, delivery, { now = new Date().to
   if (Object.hasOwn(delivery, "decompositionRef") && current.stage !== "V2") {
     throw new Error("只有 V2 阶段可以提交 decompositionRef");
   }
-  if (Object.hasOwn(delivery, "production") && current.stage !== "V3") throw new Error("只有 V3 阶段可以提交 production");
-  if (current.stage === "V3" && Object.hasOwn(delivery, "production")) preserveProductionHistory(current.production, delivery.production);
+  if (Object.hasOwn(delivery, "production") && current.stage !== "V4") throw new Error("只有 V4 阶段可以提交 production");
+  if (Object.hasOwn(delivery, "resourceAcceptance") && current.stage !== "V3") throw new Error("只有 V3 阶段可以提交 resourceAcceptance");
+  if (current.stage === "V4" && Object.hasOwn(delivery, "production")) preserveProductionHistory(current.production, delivery.production);
   if (typeof now !== "string" || !Number.isFinite(Date.parse(now)) || Date.parse(now) > Date.now()) throw new Error("阶段 completedAt 必须是实际且不晚于当前的时间");
 
   const updated = structuredClone(item);
@@ -64,7 +65,7 @@ export function completeCurrentStage(item, repo, delivery, { now = new Date().to
 
 /** 已判断轮次与已开工扩展不可被完成输入删除或改写；待检查轮次可补充真实接受结论。 */
 function preserveProductionHistory(before, after) {
-  if (!after || !Array.isArray(after.sampleAttempts) || !Array.isArray(after.expansions)) throw new Error("V3 production 必须包含样板与扩展数组");
+  if (!after || !Array.isArray(after.sampleAttempts) || !Array.isArray(after.expansions)) throw new Error("V4 production 必须包含样板与扩展数组");
   const samples = before?.sampleAttempts ?? [];
   if (after.sampleAttempts.length < samples.length || samples.some((sample, index) => {
     const updated = after.sampleAttempts[index];

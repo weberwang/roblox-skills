@@ -1,5 +1,6 @@
 import { readJson } from "./io.mjs";
 import { checkCoverage } from "./coverage.mjs";
+import { checkProgrammaticTextPolicy } from "./visual-policy.mjs";
 
 /** 人工显示评价只记录用户检查的维度，不从运行参数推断质量。 */
 export const QUALITY_DIMENSIONS = ["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"];
@@ -34,6 +35,7 @@ export function checkVisualDelivery(item, usable, context) {
     const contract = readJson(repo, item.visualContractRef);
     visualContract = contract;
     require(contract?.version === 1 && contract.workItemId === item.id, "视觉合同版本或工作项身份不匹配");
+    checkProgrammaticTextPolicy(contract, context);
     require(Array.isArray(contract?.orientations) && contract.orientations.length > 0 && contract.orientations.every((value) => ["landscape", "portrait"].includes(value)), "视觉合同必须列出目标方向");
     require(Array.isArray(contract?.inputs) && contract.inputs.length > 0 && contract.inputs.every((value) => ["touch", "keyboard-mouse", "gamepad"].includes(value)), "视觉合同必须列出实际输入方式");
     require(Array.isArray(contract?.locales) && contract.locales.length > 0 && contract.locales.every((value) => typeof value === "string" && !!value.trim()), "视觉合同必须列出实际目标语言");

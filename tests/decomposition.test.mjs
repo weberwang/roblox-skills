@@ -31,6 +31,17 @@ function bindContract(root, review, contract, name = "variant") {
   review.decompositionRef = path;
 }
 
+/** 测试变更预览路径时同步所有确认绑定，避免制造非目标的身份漂移。 */
+function rebindPreview(contract, index) {
+  const preview = contract.previews[index];
+  const source = contract.sourceImages.find((entry) => entry.id === preview.sourceImageId);
+  contract.decompositionConfirmation.previewBindings[index] = { path: preview.path, sourceImageId: preview.sourceImageId, state: source.state };
+  for (const layout of contract.layouts.filter((entry) => entry.sourceImageId === preview.sourceImageId)) layout.previewPath = preview.path;
+  for (const binding of contract.layoutConfirmation.layoutBindings.filter((entry) => entry.sourceImageId === preview.sourceImageId)) {
+    binding.previewPath = preview.path;
+  }
+}
+
 test("有效 V2 标注合同允许按既有策略进入 V3，且不会改写人工视觉结果", () => inProject((root) => {
   const { item } = v2Fixture(root, { resetVisualReview: true });
   const before = JSON.stringify(item.visualReview);
@@ -100,6 +111,7 @@ test("源图与标注预览支持可解码的固定 JPEG 与 WebP 夹具", () =>
     candidate.previews[0].path = `fixtures/preview.${extension}`;
     writeImage(root, candidate.sourceImages[0].path);
     writeImage(root, candidate.previews[0].path);
+    rebindPreview(candidate, 0);
     bindContract(root, review, candidate, `valid-${extension}`);
     const status = stageStatus(item, root);
     assert.equal(status.valid, true, `${extension}: ${status.errors.join("; ")}`);

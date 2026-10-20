@@ -7,6 +7,7 @@ import { advanceStage, completeCurrentStage, stageStatus } from "../roblox-game-
 import { createStageReview, STAGE_DELIVERABLES, STAGES } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
 import { createDecompositionFixture } from "./decomposition-fixture.mjs";
 import { createSampleFixture } from "./sample-fixture.mjs";
+import { createResourceFixture } from "./resource-fixture.mjs";
 
 const origin = Date.now() - 120_000;
 /** 将固定偏移转换为测试用 ISO 时间，避免依赖执行时的耗时。 */
@@ -51,30 +52,31 @@ function completeRecord(item, stage, startOffset, endOffset, path, { root, candi
     userMessageRef,
   };
   if (stage === "V2") record.decompositionRef = createDecompositionFixture(root, item, record).path;
-  if (stage === "V3") record.production.sampleAttempts.push(createSampleFixture(root, item, record));
+  if (stage === "V3") record.resourceAcceptance = createResourceFixture(root, item, record);
+  if (stage === "V4") record.production.sampleAttempts.push(createSampleFixture(root, item, record));
   return record;
 }
 
-/** 将V3所需Edit证据绑定到当前工作项目标和候选。 */
+/** 将 V4 所需 Edit 证据绑定到当前工作项目标和候选。 */
 function addReadback(item, observedOffset = 20_000) {
   const target = item.target ?? {};
-  item.evidence.unshift({ id: "readback-v3", type: "readback", workItemId: item.id, candidate: item.candidate,
+  item.evidence.unshift({ id: "readback-v4", type: "readback", workItemId: item.id, candidate: item.candidate,
     result: "PASS", summary: "Edit 正式源回读", observedAt: stamp(observedOffset), path: "evidence/readback.txt",
     datamodel: "Edit", studioId: target.studioId, placeId: target.placeId, universeId: target.universeId });
 }
 
-/** 构造待完成V3和其阶段交付输入，便于单独攻击readback身份校验。 */
-function v3Fixture(root) {
+/** 构造待完成 V4，资源验收历史保持完整，单独检查正式场景回读。 */
+function v4Fixture(root) {
   const path = writeStageDocument(root);
   const item = stageItem();
-  completedPrefix(item, 3, path, { root });
-  item.stage = "V3";
-  item.stageReviews.push(createStageReview(item, "V3", stamp(7_000)));
+  completedPrefix(item, 4, path, { root });
+  item.stage = "V4";
+  item.stageReviews.push(createStageReview(item, "V4", stamp(8_000)));
   const delivery = {
-    path, section: sectionTitles.V3,
-    deliverables: STAGE_DELIVERABLES.V3.map((id) => ({ id, summary: `${id} 已交付。` })),
-    exitChecks: STAGE_DELIVERABLES.V3.map((id) => ({ id, result: "PASS", basis: `${id} 已核对。` })),
-    presentedRef: "V3 实际展示", remainingIssues: [], nextAction: "进入 V4", reuse: [], evidenceIds: ["readback-v3"],
+    path, section: sectionTitles.V4,
+    deliverables: STAGE_DELIVERABLES.V4.map((id) => ({ id, summary: `${id} 已交付。` })),
+    exitChecks: STAGE_DELIVERABLES.V4.map((id) => ({ id, result: "PASS", basis: `${id} 已核对。` })),
+    presentedRef: "V4 实际展示", remainingIssues: [], nextAction: "结算", reuse: [], evidenceIds: ["readback-v4"],
     production: { sampleAttempts: [createSampleFixture(root, item, item.stageReviews.at(-1))], expansions: [] },
   };
   return { item, delivery };
@@ -127,7 +129,7 @@ test("同一文档的不同唯一标题可承载不同阶段交付", () => inPro
   assert.match(stageStatus(item, root).errors.join(" "), /不能复用相同 path\+section/);
 }));
 
-test("deliverables可连续逐阶段完成和推进且不需要用户批准", () => inProject((root) => {
+test("deliverables普通阶段连续推进，必要图片和资源确认仍独立保留", () => inProject((root) => {
   const path = writeStageDocument(root);
   const item = stageItem();
   let current = item;
@@ -141,9 +143,10 @@ test("deliverables可连续逐阶段完成和推进且不需要用户批准", ()
       reuse: [], evidenceIds: [],
     };
     if (stage === "V2") delivery.decompositionRef = createDecompositionFixture(root, current, current.stageReviews.at(-1)).path;
-    if (stage === "V3") {
+    if (stage === "V3") delivery.resourceAcceptance = createResourceFixture(root, current, current.stageReviews.at(-1));
+    if (stage === "V4") {
       addReadback(current, clock + 250);
-      delivery.evidenceIds = ["readback-v3"];
+      delivery.evidenceIds = ["readback-v4"];
       delivery.production = { sampleAttempts: [createSampleFixture(root, current, current.stageReviews.at(-1))], expansions: [] };
     }
     if (stage === "V4") assert.throws(() => completeCurrentStage(current, root, delivery), /validateExit/);
@@ -207,50 +210,34 @@ test("阶段操作拒绝伪带stageReviews的非可见工作项", () => inProjec
   assert.throws(() => completeCurrentStage(item, root, {}), /只适用于/);
 }));
 
-test("V3没有当前候选Edit readback时不能完成", () => inProject((root) => {
-  const path = writeStageDocument(root);
-  const item = stageItem();
-  completedPrefix(item, 3, path, { root });
-  item.stage = "V3";
-  item.stageReviews.push(createStageReview(item, "V3", stamp(7_000)));
-  const delivery = {
-    path, section: sectionTitles.V3,
-    deliverables: STAGE_DELIVERABLES.V3.map((id) => ({ id, summary: `${id} 已交付。` })),
-    exitChecks: STAGE_DELIVERABLES.V3.map((id) => ({ id, result: "PASS", basis: `${id} 已核对。` })),
-    presentedRef: "V3 实际展示", remainingIssues: [], nextAction: "进入 V4", reuse: [], evidenceIds: [],
-  };
-  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(7_500) }), /Edit readback/);
+test("V4没有当前候选Edit readback时不能完成", () => inProject((root) => {
+  const { item, delivery } = v4Fixture(root);
+  delivery.evidenceIds = [];
+  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(8_500) }), /Edit readback/);
 }));
 
-test("V3不能用undefined或null身份字段的readback绕过目标校验", () => inProject((root) => {
-  const invalidTargets = [
-    undefined,
-    { studioId: "studio-test", placeId: null, universeId: null },
-    { studioId: undefined, placeId: undefined, universeId: undefined },
-  ];
-  for (const target of invalidTargets) {
-    const { item, delivery } = v3Fixture(root);
-    item.target = target;
-    addReadback(item, 7_250);
-    assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(7_500) }), /Studio 与有效 Place\/Universe/);
-  }
+test("V4不能用undefined或null身份字段的readback绕过目标校验", () => inProject((root) => {
+  const { item, delivery } = v4Fixture(root);
+  addReadback(item, 8_250);
+  item.evidence[0].studioId = null;
+  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(8_500) }), /V4 Edit readback/);
 }));
 
-test("V3 readback复用证据校验拒绝畸形summary、时间和checkId", () => inProject((root) => {
-  const { item, delivery } = v3Fixture(root);
+test("V4 readback复用证据校验拒绝畸形summary、时间和checkId", () => inProject((root) => {
+  const { item, delivery } = v4Fixture(root);
   item.implementation = { verification: [{ id: "edit-readback", evidenceType: "readback" }] };
-  addReadback(item, 7_250);
+  addReadback(item, 8_250);
   Object.assign(item.evidence[0], { summary: "", observedAt: "not-an-iso-time", checkId: "missing-check" });
-  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(7_500) }), /V3 Edit readback/);
+  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(8_500) }), /V4 Edit readback/);
 }));
 
-test("V3 readback拒绝晚于当前时刻的采集时间", () => inProject((root) => {
-  const { item, delivery } = v3Fixture(root);
+test("V4 readback拒绝晚于当前时刻的采集时间", () => inProject((root) => {
+  const { item, delivery } = v4Fixture(root);
   item.implementation = { verification: [{ id: "edit-readback", evidenceType: "readback" }] };
-  addReadback(item, 7_250);
+  addReadback(item, 8_250);
   item.evidence[0].checkId = "edit-readback";
   item.evidence[0].observedAt = new Date(Date.now() + 60_000).toISOString();
-  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(7_500) }), /不能晚于当前时间/);
+  assert.throws(() => completeCurrentStage(item, root, delivery, { now: stamp(8_500) }), /不能晚于当前时间/);
 }));
 
 test("未来开始时间和倒序阶段时间无效", () => inProject((root) => {

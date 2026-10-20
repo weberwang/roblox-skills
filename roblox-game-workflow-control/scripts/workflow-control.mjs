@@ -9,6 +9,7 @@ import { advanceStage, completeCurrentStage, stageStatus } from "./runtime/stage
 import { createVisualReview } from "./runtime/visual-review.mjs";
 import { checkVisualDelivery } from "./runtime/visible.mjs";
 import { checkEvidence } from "./runtime/evidence.mjs";
+import { checkAssets } from "./runtime/assets.mjs";
 
 /** 创建未配置工作项；不虚构 Studio 目标、实施结果、验收或用户批准。 */
 export function createWorkItem(id, objective, type = "PROJECT") {
@@ -22,7 +23,7 @@ export function createWorkItem(id, objective, type = "PROJECT") {
     ...(type === "DISPLAY_LAYER" ? { hostSceneId: "" } : {}),
     target: { studioId: "", placeId: null, universeId: null, sourceOfTruth: "studio" },
     scope: { files: [], instances: [] }, acceptance: [{ id: "goal", criterion: objective }], acceptanceResults: [],
-    implementation: { owner: "", studioWriter: "", units: [], verification: [], stopConditions: [] },
+    implementation: { owner: "", studioWriter: "", visualDependency: false, units: [], verification: [], stopConditions: [] },
     requiredEvidence: visible ? ["readback", "console", "play", "visual"] : ["static"],
     evidence: [], operations: [], decisionRefs: [], dependsOn: [], assetBindings: [],
     ...(visible ? { stagePolicy: "deliverables", stageReviews: [], visualContractRef: "", visualReview: createVisualReview("candidate-1") } : {}),
@@ -60,6 +61,7 @@ function validateRuntimeExit(item, repo) {
     require: (condition, message) => { if (!condition) errors.push(message); } };
   const usable = checkEvidence(item, item.implementation?.verification ?? [], context);
   checkVisualDelivery(item, usable, context);
+  checkAssets(item, usable, context);
   return { valid: !errors.length, ready: !errors.length && !blockers.length, errors, blockers };
 }
 
@@ -69,7 +71,8 @@ function evidenceSummary(item) {
     notice: "仅汇总记录；不认证阶段执行、引擎结果或人工验收",
     technical: (Array.isArray(item.evidence) ? item.evidence : []).filter((entry) => entry?.type !== "visual")
       .map((entry) => ({ id: entry?.id, type: entry?.type, candidate: entry?.candidate, result: entry?.result, path: entry?.path })),
-    sampleProduction: item.stageReviews?.find((review) => review.stage === "V3")?.production ?? null,
+    resourceAcceptance: item.stageReviews?.find((review) => review.stage === "V3")?.resourceAcceptance ?? null,
+    sampleProduction: item.stageReviews?.find((review) => review.stage === "V4")?.production ?? null,
     visual: item.visualReview ?? null };
 }
 
@@ -114,7 +117,8 @@ function main() {
     if (!review || review.stage !== item.stage || review.status !== "active") throw new Error("当前阶段必须先有 active 记录");
     const fields = ["path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef"];
     if (review.stage === "V2") fields.push("decompositionRef");
-    if (review.stage === "V3") fields.push("production");
+    if (review.stage === "V3") fields.push("resourceAcceptance");
+    if (review.stage === "V4") fields.push("production");
     const delivery = Object.fromEntries(fields.map((key) => [key, structuredClone(review[key])]));
     console.log(writeNewJson(options.repo, options.output, delivery));
     return;

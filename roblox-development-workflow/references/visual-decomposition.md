@@ -1,12 +1,12 @@
 # V2 视觉拆解交付与合同
 
-本参考将场景/界面 V2 视觉拆解落实到 Roblox 原生对象及现有 `stageReviews`。项目级模块/场景架构拆分继续写 TDD 与模块清单；本合同只适用于 `SCENE`／`DISPLAY_LAYER` 的 V2，不新增阶段或状态机。先完成并冻结本对象 V1 效果图，再拆解，明确逐项还原标准和代表性样板计划，V2 退出后才进入 V3。
+本参考将场景/界面 V2 视觉拆解落实到 Roblox 原生对象及现有 `stageReviews`。项目级模块/场景架构拆分继续写 TDD 与模块清单；本合同只适用于 `SCENE`／`DISPLAY_LAYER` 的 V2，不新增阶段或状态机。先完成并冻结本对象 V1 效果图，再按“拆解图确认 → 布局图生成和展示 → 布局图确认”的顺序完成两个人工门，随后冻结逐项还原标准和 V4 代表性组合计划。
 
 ## 从效果图反查生产边界
 
 从完整 V1 图逐项反查文字造型、底板、填充、边框、图标、光影、装饰与空间结构，不能只写“按钮”“结算面板”等功能名。每项分配稳定正整数编号 `elementIndex` 与 `componentId`，绑定消费节点、适用状态、所有者和生产归属。原子资产内部的显著特征也说明归属；原生文本、简单填充及无需生产的项同样编号。逐项判断轮廓、比例、位置、空间层次、材质、纹理尺度、光照、水面/岸沿及其他显著表面特征，不能因已经有道具模型就遗漏环境表现。
 
-先查已登记的字体、图片、模型、材质、图标及组件。复用合格资源保留本地拆解编号，在 `sourceRef` 中绑定公共资源 ID、修订和登记来源；新生产项记已选来源或规格来源，不能伪造正式 Asset ID。V3 资源消费再按[资源使用流程](shared-asset-usage.md)绑定总表、实际实例及回读，不能用 V2 计划证明资源已接入。
+先查已登记的字体、图片、模型、材质、图标及组件。复用合格资源保留本地拆解编号，在 `sourceRef` 中绑定公共资源 ID、修订和登记来源；新生产项记已选来源或规格来源，不能伪造正式 Asset ID。V3 按[资源使用流程](shared-asset-usage.md)生产、接受并登记正式资源；V4 再绑定正式场景消费者、实际实例及 Edit 回读，不能用 V2 计划证明资源已接入。
 
 | `productionRoute` | 适用边界 |
 | --- | --- |
@@ -19,7 +19,7 @@
 
 路线由视觉显著性、变化、本地化/复用需求和实际渲染能力决定。不能因为“程序可以画”就把特色金属、纹理、立体光影降成普通色块。按来源拆分不等于拆散功能组件：交互、状态、数据、本地化、裁切和布局由原组件统一控制。动态文字不烘焙成固定图片；特色文字造型仍须保留对应生产方案。效果图和参考图只提供目标，禁止裁切、抠取为正式资源，或整图铺底隐藏混合来源。
 
-3D 的类别与具体工具分开：合格现有模型用 REUSE，直接规则几何用 ROBLOX_NATIVE；只改表面时用 MATERIAL。MODEL_3D 必须在既有 `productionBoundary` 和阶段规格中写明具体方法与理由，并在标注图上显示；关联的 `restoration.requirements[].productionMethod` 说明各要求如何实现。生成模式依据及两种工具边界见[按拆解结果路由生成模式](model-production.md#按拆解结果路由生成模式)，并用[模型生产模板](../assets/templates/model-production.md)按组件记录关联要求 ID、约束、工具输入能力和样板验证。`sourceRef` 保留来源/规格定位，`assembly`、`owner`、`consumerNodeId` 与验证计划衔接 V3 的生成、装配和回读。不另造模型专属拆解字段或第二份资源表，也不将自由文本已填写误称为程序已验证选型正确。
+3D 的类别与具体工具分开：合格现有模型用 REUSE，直接规则几何用 ROBLOX_NATIVE；只改表面时用 MATERIAL。MODEL_3D 必须在既有 `productionBoundary` 和阶段规格中写明具体方法与理由，并在标注图上显示；关联的 `restoration.requirements[].productionMethod` 说明各要求如何实现。生成模式依据及两种工具边界见[按拆解结果路由生成模式](model-production.md#按拆解结果路由生成模式)，并用[模型生产模板](../assets/templates/model-production.md)按组件记录关联要求 ID、约束、工具输入能力和样板验证。`sourceRef` 保留来源/规格定位，`assembly`、`owner`、`consumerNodeId` 与验证计划衔接 V3 资源生产及 V4 场景装配和回读。不另造模型专属拆解字段或第二份资源表，也不将自由文本已填写误称为程序已验证选型正确。
 
 ## V2 还原标准
 
@@ -29,7 +29,7 @@
 
 `target.status` 区分 `specified`（来源或项目给出的目标）、`measured`（真实测量结果）、`unknown`（当前未知）和 `not-applicable`（明确不适用），`value` 与 `basis` 分别记录目标/结果和依据。只有做过实际测量才可标 `measured`；例如计划采用的相机值写作指定值，来源无法确定的目标写明未知和原因，不能把计划或估算伪装成测量。每条要求都要指明将如何生产、由谁/哪个节点消费、以什么证据验证；固定项与允许为玩法调整的项分别标记，`adjustmentReason` 要说明固定原因或玩法调整理由/边界。
 
-`samplePlan` 在 V2 指定 V3 的 `viewId`、代表性 `componentIds`、要验证的 `requirementIds` 和组合说明。选择能暴露比例、轮廓、材质/纹理尺度、接缝、遮挡、空间层次与风格关系的最小组合，而非仅挑孤立模型。它是后续 V3 生产门的计划，V2 不能用计划冒充已经完成或接受的样板。
+`samplePlan` 在 V2 指定 V4 的 `viewId`、代表性 `componentIds`、要验证的 `requirementIds` 和组合说明。选择能暴露比例、轮廓、材质/纹理尺度、接缝、遮挡、空间层次与风格关系的最小组合，而非仅挑孤立模型。它是后续 V4 场景生产门的计划；V2 和 V3 都不能用计划冒充已经完成或接受的场景样板。
 
 ## 用户侧图片交付
 
@@ -48,19 +48,22 @@ V2 用户侧只直接展示图片，阶段汇报所需的实际交付、依据�
 | `version / workItemId / candidate` | 固定版本 1、当前工作项 ID、V2 阶段自身的候选；不强制跟随无关文案变更后的 item.candidate。 |
 | `sourceImages[]` | 每项含唯一 `id`、本工作项已完成 V1 的 `stageReviewId` 和 `candidate`、图片 `version`、项目内 `path`、实际正整数 `width/height`、唯一 `state` 及非空 `frozenRef`。后者指向真实冻结/展示来源，不能借全局方向确认冒充本图。 |
 | `components[]` | 每项含唯一 `componentId`、唯一正整数 `elementIndex`、`purpose`、`visualFeatures`、`productionRoute`、`sourceRef`、`consumerNodeId`、`parentId`、`group`、`assembly`、`layoutRef`、`productionBoundary`、`owner` 和非空唯一 `states`。除 parentId/group 可为 null 外文本必填。 |
-| `previews[]` | 每项含项目内标注图片 `path`、`sourceImageId`、真实直接展示的 `presentedRef` 和非空 `annotations`。图片支持 PNG/JPEG/WebP，不能指回源图本身或用 Markdown/Draw.io 代替。 |
+| `previews[]` | 每项含项目内编号拆解图 `path`、`sourceImageId`、真实直接展示的 `presentedRef` 和非空 `annotations`。图片支持 PNG/JPEG/WebP，不能指回源图本身或用 Markdown/Draw.io 代替。 |
+| `decompositionConfirmation` | `{id,mode,status,workItemId,candidate,userMessageRef,confirmedAt,previewBindings}`；在拆解图实际展示后记录独立人工确认，绑定当前工作项、候选和全部拆解预览；`previewBindings[]` 逐项绑定 `{path,sourceImageId,state}`。确认完成后才能生成布局图。 |
+| `layouts[]` | 每项含 `{id,sourceImageId,state,previewPath,path,componentIds,generatedAt,presentedRef}`；只有拆解确认完成后才能生成布局图，记录来源图、状态、覆盖组件、图片路径和实际展示来源。 |
+| `layoutConfirmation` | `{id,mode,status,workItemId,candidate,userMessageRef,confirmedAt,decompositionConfirmationId,layoutBindings}`；布局图实际展示后单独确认，引用已完成的拆解确认。`layoutBindings[]` 逐项绑定 `{layoutId,sourceImageId,state,previewPath,path}`，覆盖当前全部布局图；确认时间晚于拆解确认及所有布局图生成时间。 |
 | `annotations[]` | 每项含 `componentId`、图内中文 `label`、`bounds: {x,y,width,height}`；坐标指向源图像素，宽高为正且框在源图范围内，不是 Roblox 屏幕或实例坐标。 |
 | `coverage` | `allSignificantElementsMapped` 完整时才填 true；`exclusions[]` 每项说明 `description/reason`。排除理由不能掩盖属于本工作项验收范围的显著元素。 |
 | `restoration` | 必填 `views[]`、`requirements[]`、`samplePlan`；视图冻结目标机位/FOV/视口/锚点。每条还原要求绑定来源图、组件、十类 `aspect` 之一、目标状态与依据、生产方法、消费者、验证方式、调整策略/原因。目标状态只能使用 `specified`、`measured`、`unknown`、`not-applicable`；未知和不适用也需写明值与依据。样板计划引用已有视图、组件和要求，并说明最小组合。 |
 
-`consumerNodeId` 使用[可见合同](responsive-ui-contract.md)的稳定计划节点身份；V2 可以描述尚未创建的节点，V3 再核对实际 `game.` 路径。`parentId` 引用另一个 componentId 或为 null，父引用必须完整且无环；仅同组时用 `group`。`assembly` 说明组合方式，`layoutRef` 说明参照与约束，`productionBoundary` 明确资产/原生/复用的生产分工，不用 Unity GUID、Importer、Prefab 或 RectTransform 代替 Roblox 字段。
+`consumerNodeId` 使用[可见合同](responsive-ui-contract.md)的稳定计划节点身份；V2 可以描述尚未创建的节点，V4 再核对正式场景中的实际 `game.` 路径。`parentId` 引用另一个 componentId 或为 null，父引用必须完整且无环；仅同组时用 `group`。`assembly` 说明组合方式，`layoutRef` 说明参照与约束，`productionBoundary` 明确资产/原生/复用的生产分工，不用 Unity GUID、Importer、Prefab 或 RectTransform 代替 Roblox 字段。
 
 组件 `states` 必须属于源图声明的状态。每张源图至少有一个预览；每项在声明的每个状态中至少有一次标注，预览内不重复 componentId；总览与局部图可共用编号。组件与图共享编号，不把一个状态中的标注自动当成其他状态已覆盖。
 
 ## 退出检查与人工边界
 
-V2 固定交付新增 `visualDecomposition`：内部合同及 `restoration`、源图、图片、组件/状态/十类还原维度覆盖和实际展示均齐备，并与实例结构、职责、接口、资源、所有权、验证计划一并逐项写退出依据，才能 `complete-stage` 后 `advance-stage`。`restoration` 的机位与目标值是计划/来源信息，不代表 V3 样板已制作或通过。
+V2 固定交付 `visualDecomposition`：内部合同及 `restoration`、源图、拆解图和布局图、组件/状态/十类还原维度覆盖、两次顺序展示和两条独立确认均齐备，并与实例结构、职责、接口、资源、所有权、验证计划一并逐项写退出依据，才能 `complete-stage` 后 `advance-stage`。确认分别绑定当前图片和候选；布局确认还引用拆解确认。`restoration` 的机位与目标值是计划/来源信息，不代表 V4 场景样板已制作或通过。
 
-沿用既有阶段策略：`deliverables` 无必要人工决定时可以连续交付和推进；`manual` 每阶段记录真实用户确认。产品取舍、必要授权或人工视觉门尚未闭合时，只暂停依赖它的工作。V2 图片交付本身不自动产生人工视觉 PASS，也不替代 V4 当前运行候选的显示验收；已有有效确认不因无关文案变更失效。
+`deliverables` 可让普通阶段在交付后连续推进；`manual` 还要求普通阶段逐项确认。拆解图确认和布局图确认是两条必需的 V2 人工门，两个策略都不能绕过；V3 另需资源级人工接受，V4 仍需场景样板接受与最终显示验收。确认绑定精确图片和候选，旧候选、全局方向批准或另一张图片的确认不能替代。已有有效确认不因无关文案变更失效。
 
 校验器只检查项目安全路径、图片文件结构和尺寸、阶段/身份引用、编号、父关系与状态覆盖。文件检查包含 PNG 块校验和与压缩扫描行完整性、JPEG 必要表与扫描结构、WebP 帧头之外的负载边界；不是完整图像解码器。PNG 解压扫描数据限制为 256 MiB，超过时报告本地检查预算限制，不能据此判视觉失败。`frozenRef`／`presentedRef`／`userMessageRef` 真实性、框选和引线内容、来源路线是否保真、图片是否实际直出，仍须依据真实过程核对；程序不分析截图或判定视觉质量。保留真实失败、修复和复验产物，不倒填确认或阶段时间。

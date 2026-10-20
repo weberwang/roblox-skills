@@ -185,6 +185,39 @@ export function createDecompositionFixture(root, item, review, { states = ["idle
       annotations: components.map((component) => ({ componentId: component.componentId, label: `测试标注 ${component.componentId}`,
         bounds: { x: 1, y: 1, width: 12, height: 10 } })) };
   });
+  const v2StartedAt = Date.parse(review.startedAt);
+  if (!Number.isFinite(v2StartedAt)) throw new Error("测试拆解合同需要有效的 V2 阶段开始时间");
+  const decompositionConfirmation = {
+    id: `${review.id}:decomposition-confirmation`,
+    mode: "manual",
+    status: "accepted",
+    workItemId: item.id,
+    candidate: review.candidate,
+    userMessageRef: `test-user-message-${item.id}-decomposition`,
+    confirmedAt: new Date(v2StartedAt + 10).toISOString(),
+    previewBindings: previews.map((preview) => ({ path: preview.path, sourceImageId: preview.sourceImageId,
+      state: sourceImages.find((source) => source.id === preview.sourceImageId).state })),
+  };
+  const layouts = sourceImages.map((source, sourceIndex) => {
+    const path = `fixtures/layout-${sourceIndex + 1}.png`;
+    writeTestPng(root, path);
+    const preview = previews.find((entry) => entry.sourceImageId === source.id);
+    return { id: `layout-${sourceIndex + 1}`, sourceImageId: source.id, state: source.state, previewPath: preview.path,
+      path, componentIds: components.filter((component) => component.states.includes(source.state)).map((component) => component.componentId),
+      generatedAt: new Date(v2StartedAt + 20 + sourceIndex).toISOString(), presentedRef: `${path}#shown` };
+  });
+  const layoutConfirmation = {
+    id: `${review.id}:layout-confirmation`,
+    mode: "manual",
+    status: "accepted",
+    workItemId: item.id,
+    candidate: review.candidate,
+    userMessageRef: `test-user-message-${item.id}-layout`,
+    confirmedAt: new Date(v2StartedAt + 100).toISOString(),
+    decompositionConfirmationId: decompositionConfirmation.id,
+    layoutBindings: layouts.map((layout) => ({ layoutId: layout.id, sourceImageId: layout.sourceImageId, state: layout.state,
+      previewPath: layout.previewPath, path: layout.path })),
+  };
   const views = sourceImages.map((source, index) => ({
     id: `view-${index + 1}`,
     sourceImageId: source.id,
@@ -220,7 +253,8 @@ export function createDecompositionFixture(root, item, review, { states = ["idle
       combination: "测试视图中的局部组合样板计划；未发生显示检查或接受",
     },
   };
-  const contract = { version: 1, workItemId: item.id, candidate: review.candidate, sourceImages, components, previews, restoration,
+  const contract = { version: 1, workItemId: item.id, candidate: review.candidate, sourceImages, components, previews,
+    decompositionConfirmation, layouts, layoutConfirmation, restoration,
     coverage: { allSignificantElementsMapped: true, exclusions: [] } };
   const path = "fixtures/decomposition.json";
   const absolutePath = join(root, path);

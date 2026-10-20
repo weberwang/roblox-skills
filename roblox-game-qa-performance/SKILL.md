@@ -11,7 +11,7 @@ description: 规划或执行 Roblox 功能回归、安全边界、稳定性和�
 
 汇总前核对[阶段交付](../roblox-game-workflow-control/references/stage-contract.md)确已顺序退出，不能用运行证据反填 V0–V3。情景 `technical` 保存 Play/断言结果，`visual` 保存独立的当前候选用户判断；没有用户判断时仍为 NOT_RUN。保留失败、修复与复验记录，不把旧 FAIL 改写为 PASS；结构 ready 不能表述为过程正确或引擎已通过。
 
-3D 资源按[模型生产与回读清单](../roblox-development-workflow/references/model-production.md)核对 V2 选型和 V3 实际产物；参数预算、job Completed、Edit 源回读、运行加载/性能和人工视觉分别报告。不能把 maxTriangles 当实测三角数，不能从分件推断 Rig/动画完成；只复验受影响消费者及必要运行路径。
+3D 资源按[模型生产与回读清单](../roblox-development-workflow/references/model-production.md)核对 V2 选型、V3 资源产物与人工接受，以及 V4 场景装配和正式源回读；参数预算、job Completed、运行加载/性能和人工视觉分别报告。不能把 maxTriangles 当实测三角数，不能从分件推断 Rig/动画完成；只复验受影响消费者及必要运行路径。
 
 按[覆盖契约](../roblox-game-workflow-control/references/coverage-contract.md)逐行绑定批准用例与实际 Client 测量，禁止把一份 Play 复用于其他视口或情景。项目整体交付按[项目依赖契约](../roblox-game-workflow-control/references/project-contract.md)运行 `check-project`；多 Place 仅显式启用后检查关系契约与真实运行证据，单客户端和单 Place 证据不能代替跨 Place 结论。
 

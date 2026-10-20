@@ -91,3 +91,27 @@ Unity 的 grilling-record Schema 实际位于 unity-development-workflow/schemas
 独立审查发现并复现了四个 P2：资源消费节点和多 Place 成员列表畸形时崩溃、声明竖屏却无竖屏覆盖仍通过、active 消费者未登记却能聚合完成。已修复并增加回归用例；复审重跑原反例，均正确阻断，退役历史消费者仍不误阻断，无剩余实质发现。聚合报告中的各成员状态同步反映依赖、跨 Place 和全局结构错误。
 
 测试和安装只操作具名临时目录，清理前验证绝对目标范围。本轮未连接或修改 Studio、未启动 Play、未进行真实跨 Place/多客户端/真机运行、未采集或自动分析截图、未上传或发布。这些游戏层验证仍为 NOT_RUN；本地记录检查不认证用户消息、许可或日志内容的真实性。
+
+## 本轮对齐：阶段职责与执行约束
+
+按用户确认的方案同步工作流控制、视觉交付、资源生产和 Git 收尾文档。六阶段和 V0–V4 编号保持不变；Roblox 的服务器权威、Studio/Place 身份、许可、外部授权和真实显示由用户检查等平台边界继续生效。
+
+| 范围 | 对齐后的约束 |
+| --- | --- |
+| V2 拆解和布局 | 在冻结的 V1 效果图上先完成拆解图展示与独立人工确认，之后生成并展示布局图，再取得引用前一确认的独立布局确认。`deliverables` 与 `manual` 都不能跳过任一确认。确认按当前工作项、候选和图片身份绑定。 |
+| V3 资源生产 | 固定交付 `resourceProduction`、`resourceAcceptance`、`assetIdentity`、`productionRecords`。资源接受为人工 `PASS`，覆盖 V2 全部组件且 `outputs` 每组件恰有一个纯引用：`ROBLOX_NATIVE` 指向项目内非空原生制作源文件，其他生产路由引用唯一资源登记及当前 ready 修订、已批准许可和来源/产出证据。当前 visual 预览的 `resources:{stageReviewId,componentIds,outputs}` 仅覆盖自身组件，逐项匹配接受引用。复用资源也登记引用，不复制元数据；V3 不要求 V4 消费者或 Edit 回读，不声明正式 Scene 装配完成。 |
+| V4 场景和运行 | 固定交付 `editComposition`、`wiring`、`sourceReadback`、`viewableDelivery`、`runtimeIntegration`、`inputLifecycle`、`console`、`dynamicCoverage`、`humanDisplay`。原 `production:{sampleAttempts,expansions}` 整体在 V4；先接受代表性场景样板，再按 `scene-assembly` 或 `full-scene-layout` 扩展铺设。 |
+| 阶段策略 | `deliverables` 可连续推进普通阶段；`manual` 额外要求普通阶段逐项真实确认。V2 双图确认、V3 资源人工接受、V4 场景样板接受及最终人工显示验收是两种策略共有的必要门。 |
+| 条件性视觉基线 | 有视觉依赖的 `FOUNDATION`，或 `type=PROJECT` 且仅含 `SHARED`/`MODULE` 的基础工程包，仅在 `implementation.visualDependency === true` 或非空 `visualContractRef` 时启用 `docs/visual-baseline.json`；不从任意 `assetBindings` 或资产表自由字符串推断。须有三个候选，候选 `generationRef` 为 `{candidateId,image,tool,generatedAt}` JSON 对象，绑定对应候选和图片且生成时间早于选择；`selection.presentedCandidateIds` 按原序包含三个候选，用户唯一人工选择，五维 PASS 并冻结来源。候选图片须通过结构解码检查；结构检查不分析画面，纯工程包豁免，普通场景/显示层不会因含模块而误触发。 |
+| 文本与视觉验证 | `visualContract.programmaticText.enabled:true` 时 `requiredLanguages` 为 en、zh-CN、ja、ru、es，且全部列在 `visualContract.locales`，逐语言声明换行、禁止截断并提供显示适配证据；关闭时用完整空结构。`visualValidation.mode` 默认 `usability`，按批准代表性用例覆盖所有声明方向和必需情景，不要求每个备选视口/输入/语言都出现；明确要求精确还原才使用 `exact`，覆盖声明维度的完整组合并核查声明目标。`exact` 不代表像素差异检查或自动视觉分析，最终显示仍由用户检查。 |
+| 阶段 Git 收尾 | 阶段验收及规定验证通过后，代理自动在当前分支创建仅含本任务必要文件及其递归引用的本地提交。不创建分支/worktree、不推送；验证失败或文件归属不明时不提交。CLI 不执行 Git、引擎命令，也不伪造人工消息。 |
+
+历史“没有复制 Unity 的强制固定语言集”记录的是上一轮取舍；本轮已按用户决定，为启用的程序化文本合同采用上述五种语言要求。此处不覆盖之前各轮的验证数字。
+
+### 2026-10-20 验证与审查
+
+本轮实际执行 T2：`npm test` **173/173 通过**，失败、跳过均为 0；`npm run check` 验证全部 14 项技能的元数据、文档引用、模板残留、文件规模与 Node 语法；`npm pack --dry-run --json` 检查 **89 个交付文件**，新基线、视觉政策、布局确认及资源接受/产出模块均包含在包内。测试覆盖已安装入口、阶段推进、必要确认、资源生产与消费、视觉基线、五语言政策和两种覆盖模式。
+
+独立审查发现的旧确认复用、非视觉资源误触发基线、资源接受未绑定正式产出，以及接受资源 A 却消费 B 的问题均已修复并补回归。V4 完成命令与最终 `check` 都核对资源接受及消费关系；音频等其他节点的非视觉附属资源仍使用通用资源门。全量运行另暴露一个随机器执行速度波动的冻结时间反例，已改为相对评审时间构造，并在最终全量复验通过。最终独立复核未发现剩余实质问题。
+
+所有测试只使用隔离本地目录；本轮未操作 Studio、未启动 Play 或真机、未采集或分析截图、未上传或发布。`exact` 本轮实现的是完整声明组合覆盖，不是像素差异比较引擎；真实画面、用户消息语义、来源及许可内容仍由实际执行与人工检查核实。

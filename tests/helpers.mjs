@@ -7,6 +7,7 @@ import { createStageReview, STAGE_DELIVERABLES } from "../roblox-game-workflow-c
 import { advanceStage, completeCurrentStage } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
 import { createDecompositionFixture } from "./decomposition-fixture.mjs";
 import { createSampleFixture } from "./sample-fixture.mjs";
+import { createResourceFixture } from "./resource-fixture.mjs";
 
 /** 在具名隔离目录中执行测试，清理前验证最终绝对路径的归属。 */
 export function inProject(callback) {
@@ -44,6 +45,7 @@ export function fixture(root, type = "PROJECT") {
     item.visualContractRef = "evidence/visual-contract.json";
     writeFileSync(join(root, item.visualContractRef), JSON.stringify({ version: 1, workItemId: item.id,
       orientations: ["landscape"], inputs: ["keyboard-mouse"], locales: ["zh-CN"], safeAreaPolicy: "测试用安全区策略",
+      programmaticText: { enabled: false, requiredLanguages: [], wrap: {}, truncatePolicy: "forbid", displayFitEvidenceRefs: {} },
       viewports: [{ id: "desktop", width: 1280, height: 720, orientation: "landscape" }],
       coverage: { revision: 1, userMessageRef: "test-fixture-only", cases: [
         { id: "desktop-normal", viewportId: "desktop", input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" },
@@ -72,9 +74,10 @@ export function fixture(root, type = "PROJECT") {
         deliverables: keys.map((id) => ({ id, summary: `测试交付 ${id}` })),
         exitChecks: keys.map((id) => ({ id, result: "PASS", basis: `测试依据 ${id}` })),
         presentedRef: `${stagePath}#${stage}`, remainingIssues: [], nextAction: "仅用于测试后续推进", reuse: [],
-        evidenceIds: stage === "V3" ? ["readback"] : stage === "V4" ? ["readback", "console", "play", "visual"] : [], userMessageRef: "" };
+        evidenceIds: stage === "V4" ? ["readback", "console", "play", "visual"] : [], userMessageRef: "" };
       if (stage === "V2") delivery.decompositionRef = createDecompositionFixture(root, item, item.stageReviews.at(-1)).path;
-      if (stage === "V3") delivery.production = { sampleAttempts: [createSampleFixture(root, item, item.stageReviews.at(-1))], expansions: [] };
+      if (stage === "V3") delivery.resourceAcceptance = createResourceFixture(root, item, item.stageReviews.at(-1));
+      if (stage === "V4") delivery.production = { sampleAttempts: [createSampleFixture(root, item, item.stageReviews.at(-1))], expansions: [] };
       item = completeCurrentStage(item, root, delivery, { now: `2026-10-16T00:00:${String(index * 2 + 1).padStart(2, "0")}.000Z`, validateExit: () => true });
       if (stage !== "V4") item = advanceStage(item, root, { now: `2026-10-16T00:00:${String(index * 2 + 2).padStart(2, "0")}.000Z` });
     }

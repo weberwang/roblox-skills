@@ -42,7 +42,7 @@ StudioTestService.ExecuteMultiplayerTestAsync 需要 PluginSecurity；当前 exe
 
 search_asset 库存查询一次只接受一种资源类型，缺省为 Model；Package 单独查询。可见库存不等于跨所有者使用授权。generate_mesh 显式分件最多 8 项、三角形参数范围 12–20,000；这与 segment_mesh 的 5 项上限不同。generate_texture 的 Quality 预览仅支持单 MeshPart；写入前记录原位替换的影响和还原信息。
 
-模型选型与实际生产使用[3D 模型 V2/V3 流程](model-production.md)，并按[拆解结果路由生成模式](model-production.md#按拆解结果路由生成模式)逐组件选择。以下仅记录实际工具输入边界：
+模型选型与实际生产使用[3D 模型 V2/V3/V4 流程](model-production.md)，并按[拆解结果路由生成模式](model-production.md#按拆解结果路由生成模式)逐组件选择。以下仅记录实际工具输入边界：
 
 - `generate_mesh` 接受 `textPrompt`，不声明图像输入；`size` 与 `maxTriangles` 是生成目标参数，不是实际测量结果。
 - `generate_procedural_model` 的产物由基础体、脚本和可编辑 attributes 组成；调用输入支持 `attachedImageUri`。`async` 默认 `true`，工具会自动插入 Workspace。其 `prompt` 保留用户原话及用户要求的可调属性；只有图片、没有用户文字描述时传空字符串。V2 内部分析用于规格和路由，不能伪装成用户原话写进调用提示。

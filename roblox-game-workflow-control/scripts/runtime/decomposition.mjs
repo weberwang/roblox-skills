@@ -1,4 +1,5 @@
 import { readProjectImage } from "./image-file.mjs";
+import { validateLayoutConfirmation } from "./layout-confirmation.mjs";
 import { validateRestoration } from "./restoration.mjs";
 
 const ROUTES = new Set(["IMAGE_ASSET", "ROBLOX_NATIVE", "REUSE", "MODEL_3D", "MATERIAL", "VFX"]);
@@ -93,6 +94,8 @@ export function validateDecomposition(repo, item, review, contract) {
       }
     }
   }
+
+  validateLayoutConfirmation(repo, item, review, contract, sourcesById, components);
 
   if (contract.coverage?.allSignificantElementsMapped !== true || !Array.isArray(contract.coverage.exclusions)) {
     throw new Error("coverage 必须声明 allSignificantElementsMapped:true 并提供 exclusions 数组");

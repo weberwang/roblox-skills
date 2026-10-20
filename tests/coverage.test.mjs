@@ -16,6 +16,7 @@ function configureCoverage(root, item, cases, options = {}) {
   contract.viewports = viewports;
   contract.inputs = inputs;
   contract.locales = locales;
+  if (options.validationMode !== undefined) contract.visualValidation = { mode: options.validationMode };
   contract.coverage = { revision: 1, userMessageRef: "test-fixture-only", cases };
   writeFileSync(contractPath, JSON.stringify(contract));
 
@@ -203,6 +204,48 @@ test("重复 case id、不适用情景用例或未覆盖的声明维度都会阻
     } else if (dimension === "input") missingDimension.contract.inputs.push("gamepad");
     else missingDimension.contract.locales.push("en-US");
     writeFileSync(missingDimension.contractPath, JSON.stringify(missingDimension.contract));
-    assert.equal(assess(missingDimension.item, root).ready, false, dimension);
+    assert.equal(assess(missingDimension.item, root).ready, dimension !== "viewport", `usability:${dimension}`);
+
+    if (dimension !== "viewport") {
+      const exact = singleCase(root, { validationMode: "exact" });
+      if (dimension === "input") exact.contract.inputs.push("gamepad");
+      else exact.contract.locales.push("en-US");
+      writeFileSync(exact.contractPath, JSON.stringify(exact.contract));
+      assert.equal(assess(exact.item, root).ready, false, `exact:${dimension}`);
+    }
   }
+}));
+
+test("usability接受代表用例，exact 要求所有视口、输入、语言和情景组合", () => inProject((root) => {
+  const usability = fixture(root, "SCENE");
+  configureCoverage(root, usability, [
+    { id: "desktop-normal", viewportId: "desktop", input: "keyboard-mouse", locale: "zh-CN", scenario: "normal-play" },
+  ], {
+    viewports: [
+      { id: "desktop", width: 1280, height: 720, orientation: "landscape" },
+      { id: "compact", width: 960, height: 540, orientation: "landscape" },
+    ],
+    inputs: ["keyboard-mouse", "gamepad"], locales: ["zh-CN", "en-US"],
+  });
+  assert.equal(assess(usability, root).ready, true);
+
+  const exact = fixture(root, "SCENE");
+  const viewports = [
+    { id: "desktop", width: 1280, height: 720, orientation: "landscape" },
+    { id: "compact", width: 960, height: 540, orientation: "landscape" },
+  ];
+  const inputs = ["keyboard-mouse", "gamepad"];
+  const locales = ["zh-CN", "en-US"];
+  const cases = [];
+  for (const viewport of viewports) for (const input of inputs) for (const locale of locales) {
+    cases.push({
+      id: `${viewport.id}-${input}-${locale}`, viewportId: viewport.id, input, locale, scenario: "normal-play",
+    });
+  }
+  configureCoverage(root, exact, cases, { viewports, inputs, locales, validationMode: "exact" });
+  assert.equal(assess(exact, root).ready, true);
+
+  const partial = fixture(root, "SCENE");
+  configureCoverage(root, partial, cases.slice(0, -1), { viewports, inputs, locales, validationMode: "exact" });
+  assert.equal(assess(partial, root).ready, false);
 }));

@@ -47,6 +47,20 @@
       ]
     }
   ],
+  "decompositionConfirmation": {
+    "id": "", "mode": "manual", "status": "pending", "workItemId": "", "candidate": "",
+    "userMessageRef": "", "confirmedAt": null, "previewBindings": []
+  },
+  "layouts": [
+    {
+      "id": "", "sourceImageId": "", "state": "", "previewPath": "", "path": "",
+      "componentIds": [], "generatedAt": null, "presentedRef": ""
+    }
+  ],
+  "layoutConfirmation": {
+    "id": "", "mode": "manual", "status": "pending", "workItemId": "", "candidate": "",
+    "userMessageRef": "", "confirmedAt": null, "decompositionConfirmationId": "", "layoutBindings": []
+  },
   "coverage": { "allSignificantElementsMapped": false, "exclusions": [] },
   "restoration": {
     "views": [

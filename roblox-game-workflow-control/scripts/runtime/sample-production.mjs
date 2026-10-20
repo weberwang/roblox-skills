@@ -5,7 +5,7 @@ import { readProjectImage } from "./image-file.mjs";
 /** 组合样板必须逐项检查，技术加载结果不属于这些显示结论。 */
 export const SAMPLE_CHECKS = Object.freeze(["proportion", "silhouette", "materialScale", "seams", "occlusion", "depth", "style"]);
 
-/** V3 只增加阶段内生产记录，不创建第二套状态或预填视觉接受。 */
+/** V4 只增加阶段内生产记录，不创建第二套状态或预填视觉接受。 */
 export function createSampleProduction() { return { sampleAttempts: [], expansions: [] }; }
 
 /** 非空引用只证明记录存在；消息真实性和画面质量仍由实际检查负责。 */
@@ -29,12 +29,12 @@ function sameSample(record, sample) {
     && record.revision === sample.revision && record.viewId === sample.viewId;
 }
 
-/** V3 中先核对代表性样板，再核对扩批先后关系；全程不读取或评判图片像素。 */
+/** V4 中先核对代表性样板，再核对扩批先后关系；全程不读取或评判图片像素。 */
 export function checkSampleProduction(item, review, context) {
   const { require, repo } = context;
   const production = review.production;
   if (!production || !Array.isArray(production.sampleAttempts) || !Array.isArray(production.expansions)) {
-    require(false, "V3 必须记录 production.sampleAttempts 与 expansions");
+    require(false, "V4 必须记录 production.sampleAttempts 与 expansions");
     return;
   }
   let contract;
@@ -42,7 +42,7 @@ export function checkSampleProduction(item, review, context) {
     const v2 = item.stageReviews.find((entry) => entry?.stage === "V2");
     contract = readJson(repo, v2?.decompositionRef);
     if (!contract.restoration?.samplePlan) throw new Error("缺少 V2 还原标准与样板计划");
-  } catch (error) { require(false, `V3 样板计划：${error.message}`); return; }
+  } catch (error) { require(false, `V4 样板计划：${error.message}`); return; }
   const plan = contract.restoration.samplePlan;
   const samples = new Map();
   const paths = new Set();
@@ -51,7 +51,12 @@ export function checkSampleProduction(item, review, context) {
   const automaticAuthorizations = new Set(production.sampleAttempts
     .filter((sample) => sample?.acceptance?.mode === "automatic")
     .map((sample) => sample.acceptance.authorization?.userMessageRef).filter(text));
-  const sourceRefs = new Set(contract.sourceImages.map((source) => source.frozenRef));
+  const sourceRefs = new Set([
+    ...contract.sourceImages.map((source) => source.frozenRef),
+    contract.decompositionConfirmation?.userMessageRef,
+    contract.layoutConfirmation?.userMessageRef,
+    item.stageReviews.find((entry) => entry?.stage === "V3")?.resourceAcceptance?.userMessageRef,
+  ].filter(text));
   for (const stage of item.stageReviews.filter((entry) => ["V0", "V1", "V2"].includes(entry.stage))) {
     if (text(stage.userMessageRef)) sourceRefs.add(stage.userMessageRef);
   }
@@ -63,7 +68,7 @@ export function checkSampleProduction(item, review, context) {
     require(Number.isSafeInteger(sample.revision) && sample.revision > (previous?.revision ?? 0), "样板 revision 必须递增");
     require(text(sample.candidate), "样板必须声明实际 candidate");
     require(time(sample.createdAt) && Date.parse(sample.createdAt) >= Date.parse(review.startedAt)
-      && (!previous || Date.parse(sample.createdAt) >= Date.parse(previous.createdAt)), "样板 createdAt 必须在 V3 内按真实时间排列");
+      && (!previous || Date.parse(sample.createdAt) >= Date.parse(previous.createdAt)), "样板 createdAt 必须在 V4 内按真实时间排列");
     require(sample.viewId === plan.viewId, "样板必须使用 V2 目标机位");
     require(covers(sample.componentIds, plan.componentIds) && sample.componentIds.every((id) => contract.components.some((entry) => entry.componentId === id)), "样板缺少 V2 代表性组合组件或引用未知组件");
     require(covers(sample.requirementIds, plan.requirementIds) && sample.requirementIds.every((id) => contract.restoration.requirements.some((entry) => entry.id === id)), "样板缺少 V2 还原要求或引用未知要求");
@@ -100,21 +105,21 @@ export function checkSampleProduction(item, review, context) {
   }
   for (const expansion of production.expansions) {
     if (!expansion || typeof expansion !== "object") { require(false, "扩展记录必须是对象"); continue; }
-    require(["batch-production", "full-scene-layout"].includes(expansion.kind) && text(expansion.scope), "扩展必须区分批量生产与全场铺设并声明范围");
+    require(["scene-assembly", "full-scene-layout"].includes(expansion.kind) && text(expansion.scope), "扩展必须区分批量场景装配与全场铺设并声明范围");
     require(time(expansion.startedAt), "扩展必须记录真实 startedAt");
-    if (review.status === "complete") require(Date.parse(expansion.startedAt) <= Date.parse(review.completedAt), "V3 完成时间不能早于已登记扩展开工");
+    if (review.status === "complete") require(Date.parse(expansion.startedAt) <= Date.parse(review.completedAt), "V4 完成时间不能早于已登记扩展开工");
     const selected = samples.get(expansion.sampleId);
     // 后来的修复不能追认先前违规扩批；每次开工只能使用当时最新且已接受的样板。
     const latest = [...samples.values()].filter(({ sample }) => Date.parse(sample.createdAt) <= Date.parse(expansion.startedAt)).at(-1);
     require(selected && selected === latest && selected.valid && selected.sample.acceptance?.result === "PASS"
       && expansion.revision === selected.sample.revision && expansion.candidate === selected.sample.candidate
-      && Date.parse(expansion.startedAt) >= Date.parse(selected.sample.acceptance.reviewedAt), "样板尚未接受或已失效，不得批量生产或全场铺设");
+      && Date.parse(expansion.startedAt) >= Date.parse(selected.sample.acceptance.reviewedAt), "样板尚未接受或已失效，不得批量场景装配或全场铺设");
   }
   const latest = [...samples.values()].at(-1);
   if (latest) require(latest.sample.candidate === item.candidate, "最新样板必须绑定当前 candidate，旧候选不能恢复生产");
   if (review.status === "complete") {
-    require(latest?.valid && latest.sample.candidate === item.candidate && latest.sample.acceptance?.result === "PASS", "V3 退出必须有当前代表性样板显示接受，生成成功/技术 PASS/资源 ready 不能替代");
-    require(latest && Date.parse(latest.sample.acceptance?.reviewedAt) <= Date.parse(review.completedAt), "V3 退出时间不能早于样板接受");
+    require(latest?.valid && latest.sample.candidate === item.candidate && latest.sample.acceptance?.result === "PASS", "V4 退出必须有当前代表性样板显示接受，生成成功/技术 PASS/资源 ready 不能替代");
+    require(latest && Date.parse(latest.sample.acceptance?.reviewedAt) <= Date.parse(review.completedAt), "V4 退出时间不能早于样板接受");
   }
 }
 

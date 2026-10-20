@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { addOptionalProjectDocs, checkProjectDocs, initializeProjectDocs } from "../roblox-development-workflow/scripts/runtime/project-artifacts.mjs";
+import { writeTestPng } from "./decomposition-fixture.mjs";
 import { fixture, inProject } from "./helpers.mjs";
 
 const cli = resolve("roblox-development-workflow/scripts/workflow-files.mjs");
@@ -416,10 +417,133 @@ test("ready 视觉基线必须有完整真实 brief、用户消息引用和证�
     comfortConstraints: "避免频闪和大幅快速镜头移动",
   };
   visual.userMessageRef = "本任务中用户确认视觉简报的消息记录";
+  const generatedAt = new Date(Date.now() - 5_000).toISOString();
+  visual.candidates = ["a", "b", "c"].map((id) => {
+    const image = `evidence/baseline-${id}.png`;
+    const generationRef = `evidence/generation-${id}.json`;
+    writeTestPng(root, image);
+    writeFileSync(join(root, generationRef), `${JSON.stringify({
+      candidateId: id, image, tool: "test-generator", generatedAt,
+    }, null, 2)}\n`);
+    return { id, image, generationRef };
+  });
+  const reviewedAt = new Date(Date.now() - 2_000).toISOString();
+  visual.selection = {
+    mode: "manual",
+    candidateId: "b",
+    presentedCandidateIds: ["a", "b", "c"],
+    userMessageRef: "本任务中用户选择视觉候选的消息记录",
+    reviewedAt,
+    qualityResults: Object.fromEntries(["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"]
+      .map((dimension) => [dimension, {
+        status: "PASS", reason: "本地测试中的人工评价记录", userMessageRef: "本任务中用户评价候选的消息记录",
+      }])),
+  };
+  visual.frozenAt = new Date(Date.parse(reviewedAt) + 1_000).toISOString();
   writeFileSync(visualPath, `${JSON.stringify(visual, null, 2)}\n`);
 
   const completed = checkProjectDocs({ repo: root });
   assert.equal(completed.valid, true);
   assert.equal(completed.ready, false);
   assert.ok(!completed.errors.some((entry) => entry.includes("visual-baseline")));
+  assert.ok(!completed.blockers.some((entry) => entry.includes("visual-baseline")));
+}));
+
+/** ready 基线必须绑定三份不同生成物、人工候选选择和冻结时序。 */
+test("ready 视觉基线拒绝重复候选、缺失生成记录和不合法冻结时间", () => inProject((root) => {
+  initializeProjectDocs({ repo: root, projectId: "demo", include: ["visual"] });
+  const visualPath = join(root, "docs/visual-baseline.json");
+  const visual = JSON.parse(readFileSync(visualPath, "utf8"));
+  visual.status = "ready";
+  visual.artBrief = {
+    theme: "海岛冒险", audience: "探索玩家", coreLoop: "探索与返回",
+    viewingContext: "桌面端", readabilityGoal: "目标清晰", comfortConstraints: "避免频闪",
+  };
+  visual.userMessageRef = "用户确认的视觉简报消息";
+  visual.targets = ["桌面 HUD 可读性"];
+  visual.evidenceRefs = ["docs/GDD.md"];
+  const generatedAt = new Date(Date.now() - 5_000).toISOString();
+  visual.candidates = ["a", "b", "c"].map((id) => {
+    const image = `docs/${id}.png`;
+    const generationRef = `docs/${id}-generation.json`;
+    writeTestPng(root, image);
+    writeFileSync(join(root, generationRef), `${JSON.stringify({
+      candidateId: id, image, tool: "test-generator", generatedAt,
+    }, null, 2)}\n`);
+    return { id, image, generationRef };
+  });
+  const reviewedAt = new Date(Date.now() - 2_000).toISOString();
+  visual.selection = {
+    mode: "manual", candidateId: "b", presentedCandidateIds: ["a", "b", "c"], userMessageRef: "用户选择消息", reviewedAt,
+    qualityResults: Object.fromEntries(["themeFit", "audienceFit", "gameplayReadability", "viewingComfort", "artCompletion"]
+      .map((dimension) => [dimension, { status: "PASS", reason: "人工检查完成", userMessageRef: "用户评价消息" }])),
+  };
+  visual.frozenAt = new Date(Date.now() - 1_000).toISOString();
+  const saveVisual = () => writeFileSync(visualPath, `${JSON.stringify(visual, null, 2)}\n`);
+  saveVisual();
+  assert.equal(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("visual-baseline")), false);
+
+  const firstImage = join(root, visual.candidates[0].image);
+  writeFileSync(firstImage, "损坏的图片内容\n");
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("不是有效的项目图片")));
+  writeTestPng(root, visual.candidates[0].image);
+
+  const thirdReceiptPath = join(root, visual.candidates[2].generationRef);
+  const thirdReceipt = JSON.parse(readFileSync(thirdReceiptPath, "utf8"));
+  thirdReceipt.image = visual.candidates[0].image;
+  writeFileSync(thirdReceiptPath, `${JSON.stringify(thirdReceipt, null, 2)}\n`);
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("generationRef.image 必须绑定候选图片")));
+
+  thirdReceipt.image = visual.candidates[2].image;
+  thirdReceipt.generatedAt = visual.selection.reviewedAt;
+  writeFileSync(thirdReceiptPath, `${JSON.stringify(thirdReceipt, null, 2)}\n`);
+  visual.selection.presentedCandidateIds = ["a", "c", "b"];
+  saveVisual();
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("presentedCandidateIds")));
+  visual.selection.presentedCandidateIds = ["a", "b", "c"];
+
+  thirdReceipt.generatedAt = new Date(Date.now() - 500).toISOString();
+  writeFileSync(thirdReceiptPath, `${JSON.stringify(thirdReceipt, null, 2)}\n`);
+  saveVisual();
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("不能晚于 selection.reviewedAt")));
+  thirdReceipt.generatedAt = new Date(Date.now() - 5_000).toISOString().replace(/Z$/, "");
+  writeFileSync(thirdReceiptPath, `${JSON.stringify(thirdReceipt, null, 2)}\n`);
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("带时区")));
+
+  thirdReceipt.generatedAt = new Date(Date.parse(reviewedAt) - 1_000).toISOString();
+  writeFileSync(thirdReceiptPath, `${JSON.stringify(thirdReceipt, null, 2)}\n`);
+  const secondImage = visual.candidates[1].image;
+  const secondReceiptPath = join(root, visual.candidates[1].generationRef);
+  const secondReceipt = JSON.parse(readFileSync(secondReceiptPath, "utf8"));
+  visual.candidates[1].image = "docs/./a.png";
+  secondReceipt.image = visual.candidates[1].image;
+  writeFileSync(secondReceiptPath, `${JSON.stringify(secondReceipt, null, 2)}\n`);
+  saveVisual();
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("必须指向与其他候选不同的图片文件")));
+  visual.candidates[1].image = secondImage;
+  secondReceipt.image = secondImage;
+  writeFileSync(secondReceiptPath, `${JSON.stringify(secondReceipt, null, 2)}\n`);
+  saveVisual();
+
+  const originalReviewedAt = visual.selection.reviewedAt;
+  visual.selection.reviewedAt = new Date(Date.parse(originalReviewedAt)).toISOString().replace(/Z$/, "");
+  saveVisual();
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes("selection.reviewedAt 必须是有效、带时区")));
+  visual.selection.reviewedAt = originalReviewedAt;
+
+  const originalFrozenAt = visual.frozenAt;
+  visual.frozenAt = new Date(Date.parse(originalReviewedAt) + 1_000).toISOString().replace(/Z$/, "");
+  saveVisual();
+  assert.ok(checkProjectDocs({ repo: root }).errors.some((entry) => entry.includes(".frozenAt 必须是有效、带时区")));
+  visual.frozenAt = originalFrozenAt;
+
+  visual.candidates[2].id = "b";
+  visual.candidates[2].generationRef = "docs/missing-generation.json";
+  visual.frozenAt = new Date(Date.parse(visual.selection.reviewedAt) - 1_000).toISOString();
+  saveVisual();
+  const rejected = checkProjectDocs({ repo: root });
+  assert.equal(rejected.valid, false);
+  assert.ok(rejected.errors.some((entry) => entry.includes("候选不同")));
+  assert.ok(rejected.errors.some((entry) => entry.includes("generationRef")));
+  assert.ok(rejected.errors.some((entry) => entry.includes("不能早于")));
 }));

@@ -7,11 +7,11 @@ description: 设计与实现 Roblox 游戏内 HUD、菜单、对话框、输入�
 
 让界面在目标设备上可读、可操作，并与服务器权威状态一致。开始前读取玩家流程、DataModel 结构、资源登记，以及[Studio 插件路由](../roblox-development-workflow/references/studio-plugin-routing.md)和[控制模型](../roblox-game-workflow-control/references/control-model.md)。
 
-所有可见 UI 工作项均按[响应式 UI 合同](../roblox-development-workflow/references/responsive-ui-contract.md)维护 `visualContractRef`；需要视觉基线和人工画面验收时同时遵守[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)。合同记录实际安全区、视口、语言、输入和语义节点关系，不能以截图或一处尺寸推断全平台适配。
+所有可见 UI 工作项均按[响应式 UI 合同](../roblox-development-workflow/references/responsive-ui-contract.md)维护 `visualContractRef`；需要视觉基线和人工画面验收时同时遵守[视觉工作流](../roblox-development-workflow/references/visual-workflow.md)。合同记录实际安全区、视口、语言、输入、语义节点关系、程序化文本适配策略及 `visualValidation.mode`。程序化文本启用时覆盖 en、zh-CN、ja、ru、es，逐语言记录换行并禁止截断；不能以截图或一处尺寸推断全平台适配。
 
 新界面从 V0 开始，按[阶段契约](../roblox-game-workflow-control/references/stage-contract.md)完成 V1 定义和 V2 拆解后才进入正式 Edit 组合；每阶段交付、展示及退出核对完成后单步推进。复用全局美术方向须说明本界面的适用范围和剩余工作，不代表本界面已验收。运行技术结果和人工显示结论分别记录，缺用户判断保持人工 NOT_RUN。
 
-V2 必须按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)在冻结 V1 完整效果图上逐项编号框选，并用图内中文引线说明来源、父子/同组、布局装配和生产边界；直接展示图片。系统文本、可变数值、原生填充和复用组件也要覆盖，不能只列功能名或用组件树代替视觉图。内部组件身份和状态与 `decompositionRef` 对齐；正式实例路径在 V3 回读，不因框选位置猜父子关系。
+V2 必须按[视觉拆解交付](../roblox-development-workflow/references/visual-decomposition.md)在冻结 V1 完整效果图上逐项编号框选，并用图内中文引线说明来源、父子/同组、布局装配和生产边界；按序确认拆解图、生成并展示布局图、再单独确认布局图。系统文本、可变数值、原生填充和复用组件也要覆盖，不能只列功能名或用组件树代替视觉图。内部组件身份和状态与 `decompositionRef` 对齐；正式实例路径在 V4 回读，不因框选位置猜父子关系。
 
 ## 职责与输入
 

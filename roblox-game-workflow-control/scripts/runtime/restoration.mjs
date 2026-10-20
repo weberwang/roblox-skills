@@ -91,7 +91,7 @@ function validateCoverage(requirements, aspectsById, sources, components) {
   for (const componentId of components.keys()) if (!componentsWithRequirements.has(componentId)) throw new Error(`拆解组件缺少还原要求：${componentId}`);
 }
 
-/** 校验 V3 样板计划引用当前还原要求，并覆盖完整视觉维度与所需组件。 */
+/** 校验 V4 场景样板计划引用当前还原要求，并覆盖完整视觉维度与所需组件。 */
 function validateSamplePlan(samplePlan, views, requirements, aspectsById, components) {
   if (!samplePlan || typeof samplePlan !== "object" || Array.isArray(samplePlan)) throw new Error("restoration.samplePlan 必须是对象");
   requireText(samplePlan.viewId, "restoration.samplePlan.viewId");

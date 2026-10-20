@@ -102,6 +102,7 @@ export function checkAssets(item, usable, context) {
     require(!bindingKeys.has(key), `资源消费绑定重复：${binding.resourceId} / ${binding.nodePath}`);
     bindingKeys.add(key);
   }
+  checkVisualResourceConsumers(item, bindings, context);
 
   let registerPath;
   try {
@@ -173,6 +174,41 @@ export function checkAssets(item, usable, context) {
     }
     if (consumer.revision !== binding.revision) blockers.push(`资源消费者与工作项绑定 revision 不一致：${binding.resourceId} / ${binding.nodePath}`);
     validateReadbackBinding(binding, asset, usable, item, require, blockers);
+  }
+}
+
+/** 正式可见消费者必须使用 V3 已接受的同一资源，音频等独立附属绑定仍走通用资源门。 */
+function checkVisualResourceConsumers(item, bindings, context) {
+  if (!["SCENE", "DISPLAY_LAYER"].includes(item.type) || item.stage !== "V4") return;
+  const reviews = Array.isArray(item.stageReviews) ? item.stageReviews : [];
+  const acceptance = reviews.find((review) => review?.stage === "V3")?.resourceAcceptance;
+  const outputs = Array.isArray(acceptance?.outputs) ? acceptance.outputs.filter((output) => text(output?.resourceId)) : [];
+  if (!outputs.length) return;
+  let decomposition;
+  let visual;
+  try {
+    const v2 = reviews.find((review) => review?.stage === "V2");
+    decomposition = readJson(context.repo, v2?.decompositionRef);
+    visual = readJson(context.repo, item.visualContractRef);
+  } catch (error) { context.require(false, `正式资源消费者无法核对 V2 布局：${message(error)}`); return; }
+  const acceptedByNode = new Map();
+  for (const output of outputs) {
+    const component = (Array.isArray(decomposition.components) ? decomposition.components : []).find((entry) => entry?.componentId === output.componentId);
+    const node = (Array.isArray(visual.nodes) ? visual.nodes : []).find((entry) => entry?.id === component?.consumerNodeId);
+    context.require(gamePath(node?.path), `V2 组件 ${output.componentId} 的 consumerNodeId 必须定位正式视觉合同节点`);
+    if (!gamePath(node?.path)) continue;
+    const accepted = acceptedByNode.get(node.path) ?? [];
+    accepted.push(output);
+    acceptedByNode.set(node.path, accepted);
+    context.require(bindings.some((binding) => binding?.nodePath === node.path && binding.resourceId === output.resourceId
+      && binding.revision === output.revision), `V4 组件 ${output.componentId} 必须消费 V3 已接受的资源及修订`);
+  }
+  // 仅约束 V2 明确声明的可见消费节点，不从资源类型自由文本猜测声音等附属资源。
+  for (const binding of bindings) {
+    const accepted = acceptedByNode.get(binding?.nodePath);
+    if (!accepted) continue;
+    context.require(accepted.some((output) => output.resourceId === binding.resourceId && output.revision === binding.revision),
+      `V4 可见节点 ${binding.nodePath} 使用了未在 V3 接受的资源或修订`);
   }
 }
 

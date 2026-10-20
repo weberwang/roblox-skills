@@ -1,15 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fixture, inProject } from "./helpers.mjs";
 import { createSampleFixture } from "./sample-fixture.mjs";
 import { stageStatus, completeCurrentStage, advanceStage } from "../roblox-game-workflow-control/scripts/runtime/stage-operations.mjs";
 import { createStageReview } from "../roblox-game-workflow-control/scripts/runtime/stages.mjs";
 
-/** 从完整记录收窄到活动 V3，保留同一个真实检查入口所需的 V2 及证据。 */
+/** 从完整记录收窄到活动 V4，保留同一个真实检查入口所需的 V2 及证据。 */
 function sampleItem(root) {
   const item = fixture(root, "SCENE");
-  item.stageReviews = item.stageReviews.slice(0, 4);
-  item.stage = "V3";
+  item.stageReviews = item.stageReviews.slice(0, 5);
+  item.stage = "V4";
   const review = item.stageReviews.at(-1);
   review.status = "active";
   review.completedAt = null;
@@ -18,7 +20,7 @@ function sampleItem(root) {
 
 /** 为扩批设置晚于样板接受的实际时间，测试只声明记录而不执行生产。 */
 function expansion(sample, offset = 10) {
-  return { kind: "batch-production", scope: "仅本地记录测试：岸墙重复段", sampleId: sample.id,
+  return { kind: "scene-assembly", scope: "仅本地记录测试：岸墙重复段", sampleId: sample.id,
     revision: sample.revision, candidate: sample.candidate,
     startedAt: new Date(Date.parse(sample.acceptance.reviewedAt) + offset).toISOString() };
 }
@@ -28,13 +30,13 @@ function pending(sample) {
   Object.assign(sample.acceptance, { result: "NOT_RUN", evidenceIds: [], userMessageRef: "", reviewedAt: "" });
 }
 
-test("V3 模板仅创建生产空槽，缺样板不能退出但可继续修正", () => inProject((root) => {
+test("V4 模板仅创建生产空槽，缺样板不能退出但可继续修正", () => inProject((root) => {
   const { item, review } = sampleItem(root);
-  assert.deepEqual(createStageReview(item, "V3").production, { sampleAttempts: [], expansions: [] });
+  assert.deepEqual(createStageReview(item, "V4").production, { sampleAttempts: [], expansions: [] });
   review.production.sampleAttempts = [];
   assert.equal(stageStatus(item, root).valid, true);
   review.status = "complete";
-  review.completedAt = "2026-10-16T00:00:07Z";
+  review.completedAt = "2026-10-16T00:00:09Z";
   assert.match(stageStatus(item, root).errors.join(" "), /当前代表性样板显示接受/);
   delete review.production;
   assert.match(stageStatus(item, root).errors.join(" "), /production.sampleAttempts/);
@@ -48,19 +50,19 @@ test("未接受样板可修复，生成成功、技术 PASS 和 ready 都不能�
   review.deliverables.forEach((entry) => { entry.summary = "生成成功、三角预算达标、加载 PASS"; });
   assert.equal(stageStatus(item, root).valid, true);
   review.production.expansions.push(batch);
-  assert.match(stageStatus(item, root).errors.join(" "), /不得批量生产或全场铺设/);
+  assert.match(stageStatus(item, root).errors.join(" "), /不得批量场景装配或全场铺设/);
   review.production.expansions[0].kind = "full-scene-layout";
   assert.equal(stageStatus(item, root).valid, false);
 }));
 
-test("当前组合样板接受后允许扩展，并能通过相同完成接口进入 V4", () => inProject((root) => {
+test("当前组合样板接受后允许扩展，并能通过相同完成接口完成 V4", () => inProject((root) => {
   const { item, review, sample } = sampleItem(root);
   review.production.expansions.push(expansion(sample));
   assert.equal(stageStatus(item, root).valid, true);
   const fields = ["path", "section", "deliverables", "exitChecks", "presentedRef", "remainingIssues", "nextAction", "reuse", "evidenceIds", "userMessageRef", "production"];
   const delivery = Object.fromEntries(fields.map((key) => [key, structuredClone(review[key])]));
-  const completed = completeCurrentStage(item, root, delivery, { now: "2026-10-16T00:00:07Z" });
-  assert.equal(advanceStage(completed, root, { now: "2026-10-16T00:00:08Z" }).stage, "V4");
+  const completed = completeCurrentStage(item, root, delivery, { now: "2026-10-16T00:00:09Z", validateExit: () => true });
+  assert.equal(completed.stageReviews.at(-1).status, "complete");
 }));
 
 test("旧候选、旧截图、错误机位和全局方向批准不能充当当前样板接受", () => {
@@ -96,7 +98,7 @@ test("修复追加真实新轮次和新证据后恢复生产，旧 FAIL 和原�
   item.operations = [{ kind: "upload", userMessageRef: "test-existing-upload-authorization" }];
   const original = JSON.stringify(sample);
   const operations = JSON.stringify(item.operations);
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   review.production.sampleAttempts.push(repaired);
   review.production.expansions.push(expansion(repaired));
   const status = stageStatus(item, root);
@@ -109,7 +111,7 @@ test("修复追加真实新轮次和新证据后恢复生产，旧 FAIL 和原�
 
 test("修复不能复用旧截图路径，亦不能倒填接受追认提前扩批", () => inProject((root) => {
   const { item, review, sample } = sampleItem(root);
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   review.production.sampleAttempts.push(repaired);
   const oldEvidence = item.evidence.find((entry) => entry.id === sample.evidenceIds[0]);
   const newEvidence = item.evidence.find((entry) => entry.id === repaired.evidenceIds[0]);
@@ -118,16 +120,16 @@ test("修复不能复用旧截图路径，亦不能倒填接受追认提前扩�
   assert.match(stageStatus(item, root).errors.join(" "), /不得复用旧截图路径/);
   newEvidence.path = newPath;
   review.production.expansions.push({ ...expansion(repaired), startedAt: repaired.createdAt });
-  assert.match(stageStatus(item, root).errors.join(" "), /不得批量生产或全场铺设/);
+  assert.match(stageStatus(item, root).errors.join(" "), /不得批量场景装配或全场铺设/);
 }));
 
 test("新一轮样板未接受时不得继续依赖上一轮已接受结论扩批", () => inProject((root) => {
   const { item, review, sample } = sampleItem(root);
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   pending(repaired);
   review.production.sampleAttempts.push(repaired);
-  review.production.expansions.push({ ...expansion(sample), startedAt: "2026-10-16T00:00:06.200Z" });
-  assert.match(stageStatus(item, root).errors.join(" "), /不得批量生产或全场铺设/);
+  review.production.expansions.push({ ...expansion(sample), startedAt: "2026-10-16T00:00:08.200Z" });
+  assert.match(stageStatus(item, root).errors.join(" "), /不得批量场景装配或全场铺设/);
 }));
 
 test("明确授权自动检查与人工确认分开，范围不符或冒充人工均拒绝", () => inProject((root) => {
@@ -156,9 +158,27 @@ test("方向批准也不能被包装为自动视觉授权", () => inProject((roo
   assert.match(stageStatus(item, root).errors.join(" "), /精确范围/);
 }));
 
+test("V2 两次确认及 V3 资源接受不能冒充 V4 样板判断或自动授权", () => inProject((root) => {
+  const { item, sample } = sampleItem(root);
+  const v2 = item.stageReviews.find((entry) => entry.stage === "V2");
+  const contract = JSON.parse(readFileSync(join(root, v2.decompositionRef), "utf8"));
+  const references = [contract.decompositionConfirmation.userMessageRef, contract.layoutConfirmation.userMessageRef,
+    item.stageReviews.find((entry) => entry.stage === "V3").resourceAcceptance.userMessageRef];
+  const original = structuredClone(sample.acceptance);
+  for (const reference of references) {
+    sample.acceptance = { ...original, userMessageRef: reference };
+    assert.equal(stageStatus(item, root).valid, false, reference);
+    sample.acceptance = { ...original, mode: "automatic", userMessageRef: "", authorization: {
+      scope: "sample", sampleId: sample.id, candidate: sample.candidate, revision: sample.revision,
+      viewId: sample.viewId, userMessageRef: reference,
+    } };
+    assert.equal(stageStatus(item, root).valid, false, reference);
+  }
+}));
+
 test("既有自动视觉授权可覆盖多轮，但各轮必须有自己的新检查证据和结论", () => inProject((root) => {
   const { item, review, sample } = sampleItem(root);
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   review.production.sampleAttempts.push(repaired);
   for (const entry of [sample, repaired]) {
     Object.assign(entry.acceptance, { mode: "automatic", userMessageRef: "", authorization: {
@@ -177,7 +197,7 @@ test("自动检查授权不能反向冒充新一轮人工接受", () => inProjec
   Object.assign(sample.acceptance, { mode: "automatic", userMessageRef: "", authorization: {
     scope: "sample", sampleId: sample.id, candidate: sample.candidate, revision: sample.revision,
     viewId: sample.viewId, userMessageRef: authorizationRef } });
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   repaired.acceptance.userMessageRef = authorizationRef;
   review.production.sampleAttempts.push(repaired);
   assert.match(stageStatus(item, root).errors.join(" "), /或自动授权/);
@@ -197,7 +217,7 @@ test("完成 API 拒绝删除或改写旧样板结论与扩展历史", () => inP
   assert.throws(() => completeCurrentStage(item, root, { production: removed }), /不得删除或改写已有扩展历史/);
   sample.acceptance.result = "FAIL";
   review.production.expansions = [];
-  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:06.100Z" });
+  const repaired = createSampleFixture(root, item, review, { revision: 2, start: "2026-10-16T00:00:08.100Z" });
   const droppedFailure = { sampleAttempts: [repaired], expansions: [] };
   assert.throws(() => completeCurrentStage(item, root, { production: droppedFailure }), /不得删除或改写样板历史/);
 }));

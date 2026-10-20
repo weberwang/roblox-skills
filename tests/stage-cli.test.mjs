@@ -110,9 +110,11 @@ test("CLI模板不改阶段，deliverables可逐阶段推进且拒绝直接指�
   const templatePath = "docs/v3-template.json";
   assert.equal(run(root, "stage-template", "--output", templatePath).status, 0);
   const template = JSON.parse(readFileSync(join(root, templatePath), "utf8"));
-  assert.deepEqual(template.production, { sampleAttempts: [], expansions: [] }, "V3 模板不预填样板或接受");
+  assert.equal(Object.hasOwn(template, "production"), false, "场景组合只在 V4 模板出现");
+  assert.equal(template.resourceAcceptance.result, "NOT_RUN", "V3 模板不预填资源接受");
   const summary = JSON.parse(run(root, "evidence-summary").stdout);
-  assert.deepEqual(summary.sampleProduction, template.production);
+  assert.deepEqual(summary.resourceAcceptance, template.resourceAcceptance);
+  assert.equal(summary.sampleProduction, null);
 }));
 
 test("CLI manual缺确认时不保存完成，拒绝交付输入夹带stage或时间", () => inProject((root) => {
